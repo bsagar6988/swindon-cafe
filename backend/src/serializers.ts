@@ -3,6 +3,7 @@ import type {
   DeliveryAssignment as PAssignment,
   Order as POrder,
   OrderItem as POrderItem,
+  Review as PReview,
   User as PUser,
 } from "@prisma/client";
 
@@ -25,6 +26,7 @@ type OrderWithRelations = POrder & {
   customer: PUser;
   deliveryAddress: PAddress;
   assignment: (PAssignment & { rider: PUser }) | null;
+  review: PReview | null;
 };
 
 export function serializeOrder(order: OrderWithRelations) {
@@ -55,6 +57,15 @@ export function serializeOrder(order: OrderWithRelations) {
           currentLng: order.assignment.currentLng,
         }
       : null,
+    review: order.review
+      ? {
+          id: order.review.id,
+          orderId: order.review.orderId,
+          rating: order.review.rating,
+          comment: order.review.comment,
+          createdAt: order.review.createdAt.toISOString(),
+        }
+      : null,
   };
 }
 
@@ -63,4 +74,5 @@ export const orderInclude = {
   customer: true,
   deliveryAddress: true,
   assignment: { include: { rider: true } },
+  review: true,
 } as const;

@@ -11,6 +11,7 @@ import { LoginScreen } from "../screens/LoginScreen";
 import { OrdersQueueScreen } from "../screens/OrdersQueueScreen";
 import { OrderDetailScreen } from "../screens/OrderDetailScreen";
 import { MenuManagementScreen } from "../screens/MenuManagementScreen";
+import { RidersScreen } from "../screens/RidersScreen";
 import { ProfileScreen } from "../screens/ProfileScreen";
 import type { AuthStackParamList, MainTabParamList, RootStackParamList } from "./types";
 
@@ -49,6 +50,14 @@ function MainTabs() {
         options={{
           title: "Menu",
           tabBarIcon: ({ color, size }) => <Ionicons name="restaurant-outline" size={size} color={color} />,
+        }}
+      />
+      <Tab.Screen
+        name="RidersTab"
+        component={RidersScreen}
+        options={{
+          title: "Riders",
+          tabBarIcon: ({ color, size }) => <Ionicons name="bicycle-outline" size={size} color={color} />,
         }}
       />
       <Tab.Screen

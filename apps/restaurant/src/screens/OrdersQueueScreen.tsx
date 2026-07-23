@@ -10,7 +10,7 @@ import {
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { theme, type Order, type OrderStatus } from "@restaurant/shared";
+import { AppHeader, theme, type Order, type OrderStatus } from "@restaurant/shared";
 import { useOrders } from "../context/OrdersContext";
 import { Button } from "../components/Button";
 import { actionsFor, NON_TERMINAL_STATUSES, STATUS_COLOR, STATUS_LABEL } from "../statusActions";
@@ -63,11 +63,14 @@ export function OrdersQueueScreen() {
       keyExtractor={(o) => o.id}
       refreshControl={<RefreshControl refreshing={loading} onRefresh={refresh} />}
       ListHeaderComponent={
-        <View style={styles.header}>
-          <Text style={styles.title}>Incoming orders</Text>
-          <Text style={styles.subtitle}>
-            {queue.length} active order{queue.length === 1 ? "" : "s"}
-          </Text>
+        <View>
+          <AppHeader subtitle="Kitchen" />
+          <View style={styles.header}>
+            <Text style={styles.title}>Incoming orders</Text>
+            <Text style={styles.subtitle}>
+              {queue.length} active order{queue.length === 1 ? "" : "s"}
+            </Text>
+          </View>
         </View>
       }
       ListEmptyComponent={

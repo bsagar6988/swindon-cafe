@@ -9,7 +9,7 @@ import {
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { theme } from "@restaurant/shared";
+import { AppHeader, theme } from "@restaurant/shared";
 import { useMenu } from "../context/MenuContext";
 import type { RootStackParamList } from "../navigation/types";
 
@@ -51,9 +51,12 @@ export function HomeScreen() {
       sections={sections}
       keyExtractor={(item) => item.id}
       ListHeaderComponent={
-        <View style={styles.header}>
-          <Text style={styles.title}>Our Menu</Text>
-          <Text style={styles.subtitle}>Delivered fresh to your door</Text>
+        <View>
+          <AppHeader />
+          <View style={styles.header}>
+            <Text style={styles.title}>Our Menu</Text>
+            <Text style={styles.subtitle}>Delivered fresh to your door</Text>
+          </View>
         </View>
       }
       renderSectionHeader={({ section }) => (

@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { ActivityIndicator, FlatList, StyleSheet, Text, View } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { theme } from "@restaurant/shared";
+import { AppHeader, theme } from "@restaurant/shared";
 import { useAuth } from "../context/AuthContext";
 import { useAvailableDeliveries } from "../hooks/useAvailableDeliveries";
 import { Button } from "../components/Button";
@@ -46,6 +46,7 @@ export function AvailableDeliveriesScreen() {
 
   return (
     <View style={styles.container}>
+      <AppHeader subtitle="Rider" />
       {acceptError && <Text style={[styles.error, { paddingHorizontal: theme.spacing(5) }]}>{acceptError}</Text>}
       {deliveries.length === 0 ? (
         <View style={styles.center}>

@@ -4,6 +4,8 @@ import type {
   MenuItem,
   Order,
   OrderStatus,
+  Review,
+  Rider,
   UserRole,
 } from "./types";
 
@@ -15,6 +17,26 @@ export interface ApiClientConfig {
 export class ApiError extends Error {
   constructor(public status: number, message: string) {
     super(message);
+  }
+}
+
+function extractErrorMessage(rawBody: string): string | null {
+  if (!rawBody) return null;
+  try {
+    const parsed = JSON.parse(rawBody);
+    const err = parsed?.error;
+    if (typeof err === "string") return err;
+    if (err && typeof err === "object") {
+      const fieldErrors = err.fieldErrors as Record<string, string[]> | undefined;
+      const firstFieldError = fieldErrors && Object.values(fieldErrors).flat()[0];
+      if (firstFieldError) return firstFieldError;
+      const firstFormError = (err.formErrors as string[] | undefined)?.[0];
+      if (firstFormError) return firstFormError;
+      return "Invalid request";
+    }
+    return null;
+  } catch {
+    return rawBody;
   }
 }
 
@@ -34,7 +56,7 @@ export function createApiClient(config: ApiClientConfig) {
     });
     if (!res.ok) {
       const text = await res.text().catch(() => res.statusText);
-      throw new ApiError(res.status, text || res.statusText);
+      throw new ApiError(res.status, extractErrorMessage(text) || res.statusText);
     }
     if (res.status === 204) return undefined as T;
     return (await res.json()) as T;
@@ -101,6 +123,19 @@ export function createApiClient(config: ApiClientConfig) {
         method: "POST",
         body: address,
       }),
+
+    // reviews
+    createReview: (orderId: string, rating: number, comment?: string) =>
+      request<Review>(`/orders/${orderId}/review`, {
+        method: "POST",
+        body: { rating, comment },
+      }),
+
+    // riders (restaurant admin)
+    listRiders: () => request<Rider[]>("/riders"),
+    createRider: (name: string, email: string, password: string) =>
+      request<Rider>("/riders", { method: "POST", body: { name, email, password } }),
+    deleteRider: (id: string) => request<void>(`/riders/${id}`, { method: "DELETE" }),
   };
 }
 

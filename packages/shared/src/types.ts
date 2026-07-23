@@ -64,6 +64,14 @@ export interface DeliveryAssignment {
   currentLng?: number | null;
 }
 
+export interface Review {
+  id: string;
+  orderId: string;
+  rating: number;
+  comment?: string | null;
+  createdAt: string;
+}
+
 export interface Order {
   id: string;
   customerId: string;
@@ -77,6 +85,14 @@ export interface Order {
   createdAt: string;
   updatedAt: string;
   assignment?: DeliveryAssignment | null;
+  review?: Review | null;
+}
+
+export interface Rider {
+  id: string;
+  name: string;
+  email: string;
+  createdAt: string;
 }
 
 export interface OrderStatusEvent {

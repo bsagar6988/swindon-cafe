@@ -189,3 +189,54 @@ ordersRouter.post("/:id/status", requireAuth, async (req, res) => {
   emitOrderUpdate(order.id, serialized);
   res.json(serialized);
 });
+
+const reviewSchema = z.object({
+  rating: z.number().int().min(1).max(5),
+  comment: z.string().max(1000).nullable().optional(),
+});
+
+ordersRouter.post(
+  "/:id/review",
+  requireAuth,
+  requireRole("CUSTOMER"),
+  async (req, res) => {
+    const parsed = reviewSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({ error: parsed.error.flatten() });
+    }
+
+    const order = await prisma.order.findUnique({
+      where: { id: req.params.id },
+      include: orderInclude,
+    });
+    if (!order) return res.status(404).json({ error: "Order not found" });
+    if (order.customerId !== req.auth!.sub) {
+      return res.status(403).json({ error: "Not your order" });
+    }
+    if (order.status !== "DELIVERED") {
+      return res
+        .status(400)
+        .json({ error: "You can only review an order after it's been delivered" });
+    }
+    if (order.review) {
+      return res.status(409).json({ error: "This order already has a review" });
+    }
+
+    await prisma.review.create({
+      data: {
+        orderId: order.id,
+        customerId: req.auth!.sub,
+        rating: parsed.data.rating,
+        comment: parsed.data.comment ?? null,
+      },
+    });
+
+    const updated = await prisma.order.findUnique({
+      where: { id: order.id },
+      include: orderInclude,
+    });
+    const serialized = serializeOrder(updated!);
+    emitOrderUpdate(order.id, serialized);
+    res.status(201).json(serialized.review);
+  }
+);

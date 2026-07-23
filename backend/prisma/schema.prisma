@@ -25,6 +25,7 @@ model User {
   addresses           Address[]
   ordersAsCustomer    Order[]             @relation("CustomerOrders")
   deliveryAssignments DeliveryAssignment[]
+  reviews             Review[]
 }
 
 model Address {
@@ -85,6 +86,7 @@ model Order {
   statusEvents  OrderStatusEvent[]
   assignment    DeliveryAssignment?
   payment       Payment?
+  review        Review?
 }
 
 model OrderItem {
@@ -130,4 +132,16 @@ model Payment {
 
   order   Order  @relation(fields: [orderId], references: [id])
   orderId String @unique
+}
+
+model Review {
+  id        String   @id @default(cuid())
+  rating    Int
+  comment   String?
+  createdAt DateTime @default(now())
+
+  order      Order  @relation(fields: [orderId], references: [id])
+  orderId    String @unique
+  customer   User   @relation(fields: [customerId], references: [id])
+  customerId String
 }

@@ -1,16 +1,41 @@
-import React from "react";
-import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from "react-native";
+import React, { useState } from "react";
+import { ActivityIndicator, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { theme } from "@restaurant/shared";
+import { useAuth } from "../context/AuthContext";
 import { useOrderTracking } from "../hooks/useOrderTracking";
 import { StatusStepper } from "../components/StatusStepper";
 import { RouteProgress } from "../components/RouteProgress";
+import { StarRating } from "../components/StarRating";
+import { Button } from "../components/Button";
 import type { RootStackParamList } from "../navigation/types";
 
 type Props = NativeStackScreenProps<RootStackParamList, "OrderTracking">;
 
 export function OrderTrackingScreen({ route }: Props) {
+  const { api } = useAuth();
   const { order, error } = useOrderTracking(route.params.orderId);
+  const [draftRating, setDraftRating] = useState(0);
+  const [draftComment, setDraftComment] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [reviewError, setReviewError] = useState<string | null>(null);
+
+  const submitReview = async () => {
+    if (draftRating === 0) {
+      setReviewError("Please select a star rating");
+      return;
+    }
+    setReviewError(null);
+    setSubmitting(true);
+    try {
+      await api.createReview(route.params.orderId, draftRating, draftComment.trim() || undefined);
+      // the order's review field updates via the live socket subscription above
+    } catch (e) {
+      setReviewError(e instanceof Error ? e.message : "Failed to submit review");
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   if (error) {
     return (
@@ -64,6 +89,39 @@ export function OrderTrackingScreen({ route }: Props) {
         {order.deliveryAddress.line1}, {order.deliveryAddress.city}, {order.deliveryAddress.state}{" "}
         {order.deliveryAddress.postalCode}
       </Text>
+
+      {order.status === "DELIVERED" && (
+        <View style={styles.reviewCard}>
+          <Text style={styles.sectionTitle}>Your review</Text>
+          {order.review ? (
+            <View>
+              <StarRating rating={order.review.rating} />
+              {order.review.comment ? (
+                <Text style={styles.reviewComment}>{order.review.comment}</Text>
+              ) : null}
+            </View>
+          ) : (
+            <View>
+              <Text style={styles.reviewPrompt}>How was your order?</Text>
+              <StarRating rating={draftRating} onChange={setDraftRating} />
+              <TextInput
+                style={styles.reviewInput}
+                placeholder="Add a comment (optional)"
+                multiline
+                value={draftComment}
+                onChangeText={setDraftComment}
+              />
+              {reviewError && <Text style={styles.error}>{reviewError}</Text>}
+              <Button
+                title="Submit review"
+                onPress={submitReview}
+                loading={submitting}
+                style={styles.reviewButton}
+              />
+            </View>
+          )}
+        </View>
+      )}
     </ScrollView>
   );
 }
@@ -92,6 +150,25 @@ const styles = StyleSheet.create({
     marginTop: theme.spacing(5),
     marginBottom: theme.spacing(2),
   },
+  reviewCard: {
+    backgroundColor: theme.colors.surface,
+    borderRadius: theme.radius.md,
+    padding: theme.spacing(4),
+    marginTop: theme.spacing(5),
+  },
+  reviewPrompt: { color: theme.colors.textMuted, marginBottom: theme.spacing(2) },
+  reviewComment: { color: theme.colors.text, marginTop: theme.spacing(2) },
+  reviewInput: {
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    borderRadius: theme.radius.md,
+    padding: theme.spacing(3),
+    marginTop: theme.spacing(3),
+    minHeight: 70,
+    textAlignVertical: "top",
+    backgroundColor: theme.colors.background,
+  },
+  reviewButton: { marginTop: theme.spacing(3) },
   itemRow: { flexDirection: "row", justifyContent: "space-between", marginBottom: theme.spacing(2) },
   itemName: { color: theme.colors.text },
   itemPrice: { color: theme.colors.textMuted, fontWeight: "600" },
