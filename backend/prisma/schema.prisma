@@ -3,11 +3,13 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
-// SQLite has no native enum support in Prisma; these are validated as
+// Kept as plain strings (validated by zod + shared TS union types at the
+// application layer) rather than native Postgres enums, so this schema stays
+// compatible with the SQLite-based local dev setup this project started on.
 // enums at the application layer (zod schemas + shared TS union types).
 // UserRole: CUSTOMER | RESTAURANT_ADMIN | RESTAURANT_STAFF | DELIVERY_RIDER
 // OrderStatus: PLACED | ACCEPTED | PREPARING | READY_FOR_PICKUP | OUT_FOR_DELIVERY | DELIVERED | CANCELLED
