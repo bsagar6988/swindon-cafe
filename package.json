@@ -1,0 +1,15 @@
+{
+  "name": "restaurant-delivery-app",
+  "private": true,
+  "workspaces": [
+    "backend",
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "dev:backend": "npm run dev --workspace=backend",
+    "dev:customer": "npm run start --workspace=apps/customer",
+    "dev:restaurant": "npm run start --workspace=apps/restaurant",
+    "dev:delivery": "npm run start --workspace=apps/delivery"
+  }
+}

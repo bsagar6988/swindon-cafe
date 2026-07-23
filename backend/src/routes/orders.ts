@@ -1,0 +1,191 @@
+import { Router } from "express";
+import { z } from "zod";
+import { prisma } from "../prisma";
+import { requireAuth, requireRole } from "../auth";
+import { orderInclude, serializeOrder } from "../serializers";
+import { emitNewOrder, emitOrderUpdate } from "../realtime";
+
+export const ordersRouter = Router();
+
+const FLAT_DELIVERY_FEE_CENTS = 299;
+
+const createOrderSchema = z.object({
+  addressId: z.string().min(1),
+  items: z
+    .array(
+      z.object({
+        menuItemId: z.string().min(1),
+        quantity: z.number().int().positive(),
+      })
+    )
+    .min(1),
+});
+
+ordersRouter.post(
+  "/",
+  requireAuth,
+  requireRole("CUSTOMER"),
+  async (req, res) => {
+    const parsed = createOrderSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({ error: parsed.error.flatten() });
+    }
+    const { addressId, items } = parsed.data;
+
+    const address = await prisma.address.findUnique({
+      where: { id: addressId },
+    });
+    if (!address || address.customerId !== req.auth!.sub) {
+      return res.status(400).json({ error: "Invalid address" });
+    }
+
+    const menuItems = await prisma.menuItem.findMany({
+      where: { id: { in: items.map((i) => i.menuItemId) } },
+    });
+    if (menuItems.length !== items.length) {
+      return res.status(400).json({ error: "One or more menu items not found" });
+    }
+    const unavailable = menuItems.find((m) => !m.isAvailable);
+    if (unavailable) {
+      return res
+        .status(400)
+        .json({ error: `${unavailable.name} is currently unavailable` });
+    }
+
+    const subtotalCents = items.reduce((sum, i) => {
+      const menuItem = menuItems.find((m) => m.id === i.menuItemId)!;
+      return sum + menuItem.priceCents * i.quantity;
+    }, 0);
+    const totalCents = subtotalCents + FLAT_DELIVERY_FEE_CENTS;
+
+    const order = await prisma.order.create({
+      data: {
+        customerId: req.auth!.sub,
+        deliveryAddressId: addressId,
+        subtotalCents,
+        deliveryFeeCents: FLAT_DELIVERY_FEE_CENTS,
+        totalCents,
+        status: "PLACED",
+        items: {
+          create: items.map((i) => {
+            const menuItem = menuItems.find((m) => m.id === i.menuItemId)!;
+            return {
+              menuItemId: menuItem.id,
+              name: menuItem.name,
+              priceCents: menuItem.priceCents,
+              quantity: i.quantity,
+            };
+          }),
+        },
+        statusEvents: { create: { status: "PLACED" } },
+      },
+      include: orderInclude,
+    });
+
+    const serialized = serializeOrder(order);
+    emitNewOrder(serialized);
+    res.status(201).json(serialized);
+  }
+);
+
+ordersRouter.get("/:id", requireAuth, async (req, res) => {
+  const order = await prisma.order.findUnique({
+    where: { id: req.params.id },
+    include: orderInclude,
+  });
+  if (!order) return res.status(404).json({ error: "Order not found" });
+  res.json(serializeOrder(order));
+});
+
+ordersRouter.get("/", requireAuth, async (req, res) => {
+  const status = req.query.status as string | undefined;
+  const where =
+    req.auth!.role === "CUSTOMER"
+      ? { customerId: req.auth!.sub, ...(status ? { status: status as any } : {}) }
+      : req.auth!.role === "DELIVERY_RIDER"
+      ? {
+          assignment: { riderId: req.auth!.sub },
+          ...(status ? { status: status as any } : {}),
+        }
+      : status
+      ? { status: status as any }
+      : {};
+
+  const orders = await prisma.order.findMany({
+    where,
+    include: orderInclude,
+    orderBy: { createdAt: "desc" },
+  });
+  res.json(orders.map(serializeOrder));
+});
+
+const RESTAURANT_TRANSITIONS: Record<string, string[]> = {
+  PLACED: ["ACCEPTED", "CANCELLED"],
+  ACCEPTED: ["PREPARING", "CANCELLED"],
+  PREPARING: ["READY_FOR_PICKUP", "CANCELLED"],
+};
+
+const RIDER_TRANSITIONS: Record<string, string[]> = {
+  OUT_FOR_DELIVERY: ["DELIVERED"],
+};
+
+const statusSchema = z.object({
+  status: z.enum([
+    "PLACED",
+    "ACCEPTED",
+    "PREPARING",
+    "READY_FOR_PICKUP",
+    "OUT_FOR_DELIVERY",
+    "DELIVERED",
+    "CANCELLED",
+  ]),
+});
+
+ordersRouter.post("/:id/status", requireAuth, async (req, res) => {
+  const parsed = statusSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({ error: parsed.error.flatten() });
+  }
+  const { status: nextStatus } = parsed.data;
+
+  const order = await prisma.order.findUnique({
+    where: { id: req.params.id },
+    include: orderInclude,
+  });
+  if (!order) return res.status(404).json({ error: "Order not found" });
+
+  const role = req.auth!.role;
+  if (role === "RESTAURANT_ADMIN" || role === "RESTAURANT_STAFF") {
+    const allowed = RESTAURANT_TRANSITIONS[order.status] ?? [];
+    if (!allowed.includes(nextStatus)) {
+      return res
+        .status(400)
+        .json({ error: `Cannot move order from ${order.status} to ${nextStatus}` });
+    }
+  } else if (role === "DELIVERY_RIDER") {
+    if (order.assignment?.riderId !== req.auth!.sub) {
+      return res.status(403).json({ error: "Not assigned to this order" });
+    }
+    const allowed = RIDER_TRANSITIONS[order.status] ?? [];
+    if (!allowed.includes(nextStatus)) {
+      return res
+        .status(400)
+        .json({ error: `Cannot move order from ${order.status} to ${nextStatus}` });
+    }
+  } else {
+    return res.status(403).json({ error: "Forbidden for this role" });
+  }
+
+  const updated = await prisma.order.update({
+    where: { id: order.id },
+    data: {
+      status: nextStatus,
+      statusEvents: { create: { status: nextStatus } },
+    },
+    include: orderInclude,
+  });
+
+  const serialized = serializeOrder(updated);
+  emitOrderUpdate(order.id, serialized);
+  res.json(serialized);
+});

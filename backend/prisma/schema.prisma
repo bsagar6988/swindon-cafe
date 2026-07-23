@@ -1,0 +1,131 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// SQLite has no native enum support in Prisma; these are validated as
+// enums at the application layer (zod schemas + shared TS union types).
+// UserRole: CUSTOMER | RESTAURANT_ADMIN | RESTAURANT_STAFF | DELIVERY_RIDER
+// OrderStatus: PLACED | ACCEPTED | PREPARING | READY_FOR_PICKUP | OUT_FOR_DELIVERY | DELIVERED | CANCELLED
+
+model User {
+  id           String   @id @default(cuid())
+  name         String
+  email        String   @unique
+  passwordHash String
+  role         String
+  createdAt    DateTime @default(now())
+
+  addresses           Address[]
+  ordersAsCustomer    Order[]             @relation("CustomerOrders")
+  deliveryAssignments DeliveryAssignment[]
+}
+
+model Address {
+  id         String  @id @default(cuid())
+  label      String
+  line1      String
+  line2      String?
+  city       String
+  state      String
+  postalCode String
+  lat        Float?
+  lng        Float?
+
+  customer   User    @relation(fields: [customerId], references: [id])
+  customerId String
+
+  orders Order[]
+}
+
+model MenuCategory {
+  id        String @id @default(cuid())
+  name      String
+  sortOrder Int    @default(0)
+
+  items MenuItem[]
+}
+
+model MenuItem {
+  id          String  @id @default(cuid())
+  name        String
+  description String?
+  priceCents  Int
+  imageUrl    String?
+  isAvailable Boolean @default(true)
+
+  category   MenuCategory @relation(fields: [categoryId], references: [id])
+  categoryId String
+
+  orderItems OrderItem[]
+}
+
+model Order {
+  id               String   @id @default(cuid())
+  status           String   @default("PLACED")
+  subtotalCents    Int
+  deliveryFeeCents Int
+  totalCents       Int
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  customer   User   @relation("CustomerOrders", fields: [customerId], references: [id])
+  customerId String
+
+  deliveryAddress   Address @relation(fields: [deliveryAddressId], references: [id])
+  deliveryAddressId String
+
+  items         OrderItem[]
+  statusEvents  OrderStatusEvent[]
+  assignment    DeliveryAssignment?
+  payment       Payment?
+}
+
+model OrderItem {
+  id         String @id @default(cuid())
+  name       String
+  priceCents Int
+  quantity   Int
+
+  order      Order    @relation(fields: [orderId], references: [id])
+  orderId    String
+  menuItem   MenuItem @relation(fields: [menuItemId], references: [id])
+  menuItemId String
+}
+
+model OrderStatusEvent {
+  id     String   @id @default(cuid())
+  status String
+  at     DateTime @default(now())
+
+  order   Order  @relation(fields: [orderId], references: [id])
+  orderId String
+}
+
+model DeliveryAssignment {
+  id         String   @id @default(cuid())
+  currentLat Float?
+  currentLng Float?
+
+  order   Order  @relation(fields: [orderId], references: [id])
+  orderId String @unique
+
+  rider   User   @relation(fields: [riderId], references: [id])
+  riderId String
+}
+
+model Payment {
+  id         String   @id @default(cuid())
+  provider   String
+  providerRef String?
+  status     String
+  amountCents Int
+  createdAt  DateTime @default(now())
+
+  order   Order  @relation(fields: [orderId], references: [id])
+  orderId String @unique
+}
