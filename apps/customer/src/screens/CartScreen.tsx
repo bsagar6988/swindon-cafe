@@ -5,6 +5,7 @@ import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { theme } from "@restaurant/shared";
 import { useCart } from "../context/CartContext";
 import { Button } from "../components/Button";
+import { MenuItemThumbnail } from "../components/MenuItemThumbnail";
 import type { RootStackParamList } from "../navigation/types";
 
 export function CartScreen() {
@@ -28,7 +29,8 @@ export function CartScreen() {
         contentContainerStyle={{ padding: theme.spacing(5) }}
         renderItem={({ item: line }) => (
           <View style={styles.row}>
-            <View style={{ flex: 1 }}>
+            <MenuItemThumbnail imageUrl={line.item.imageUrl} name={line.item.name} size={52} />
+            <View style={{ flex: 1, marginLeft: theme.spacing(3) }}>
               <Text style={styles.name}>{line.item.name}</Text>
               <Text style={styles.price}>
                 ${((line.item.priceCents * line.quantity) / 100).toFixed(2)}

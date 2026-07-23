@@ -1,5 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
+import { FOOD_ICONS } from "./foodIcons";
 
 const prisma = new PrismaClient();
 
@@ -79,12 +80,12 @@ async function main() {
     { id: "seed-item-5", name: "Veg Fried Rice", priceCents: 1099, categoryId: mains.id, description: "Wok-fried rice with seasonal vegetables" },
     { id: "seed-item-6", name: "Lemonade", priceCents: 399, categoryId: drinks.id, description: "Fresh-squeezed, lightly sweetened" },
     { id: "seed-item-7", name: "Cola", priceCents: 299, categoryId: drinks.id, description: "Chilled can" },
-  ];
+  ].map((item) => ({ ...item, imageUrl: FOOD_ICONS[item.id] }));
 
   for (const item of items) {
     await prisma.menuItem.upsert({
       where: { id: item.id },
-      update: {},
+      update: { imageUrl: item.imageUrl },
       create: item,
     });
   }

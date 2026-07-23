@@ -1,5 +1,5 @@
 import React from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { Image, StyleSheet, Text, View } from "react-native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { theme } from "@restaurant/shared";
 import { useMenu } from "../context/MenuContext";
@@ -24,9 +24,13 @@ export function ItemDetailScreen({ route, navigation }: Props) {
 
   return (
     <View style={styles.container}>
-      <View style={styles.imagePlaceholder}>
-        <Text style={styles.imagePlaceholderText}>{item.name[0]}</Text>
-      </View>
+      {item.imageUrl ? (
+        <Image source={{ uri: item.imageUrl }} style={styles.image} resizeMode="contain" />
+      ) : (
+        <View style={styles.imagePlaceholder}>
+          <Text style={styles.imagePlaceholderText}>{item.name[0]}</Text>
+        </View>
+      )}
       <Text style={styles.name}>{item.name}</Text>
       {item.description && <Text style={styles.description}>{item.description}</Text>}
       <Text style={styles.price}>${(item.priceCents / 100).toFixed(2)}</Text>
@@ -47,6 +51,13 @@ export function ItemDetailScreen({ route, navigation }: Props) {
 const styles = StyleSheet.create({
   container: { flex: 1, padding: theme.spacing(5), backgroundColor: theme.colors.background },
   center: { flex: 1, alignItems: "center", justifyContent: "center" },
+  image: {
+    height: 200,
+    width: "100%",
+    borderRadius: theme.radius.lg,
+    backgroundColor: "#FBF6EF",
+    marginBottom: theme.spacing(5),
+  },
   imagePlaceholder: {
     height: 180,
     borderRadius: theme.radius.lg,

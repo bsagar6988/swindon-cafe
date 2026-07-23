@@ -11,6 +11,7 @@ import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { AppHeader, theme } from "@restaurant/shared";
 import { useMenu } from "../context/MenuContext";
+import { MenuItemThumbnail } from "../components/MenuItemThumbnail";
 import type { RootStackParamList } from "../navigation/types";
 
 export function HomeScreen() {
@@ -67,6 +68,7 @@ export function HomeScreen() {
           style={styles.itemRow}
           onPress={() => navigation.navigate("ItemDetail", { itemId: item.id })}
         >
+          <MenuItemThumbnail imageUrl={item.imageUrl} name={item.name} size={64} />
           <View style={styles.itemInfo}>
             <Text style={styles.itemName}>{item.name}</Text>
             {item.description && (
@@ -106,7 +108,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: theme.colors.border,
   },
-  itemInfo: { flex: 1, marginRight: theme.spacing(3) },
+  itemInfo: { flex: 1, marginLeft: theme.spacing(3), marginRight: theme.spacing(3) },
   itemName: { fontSize: 16, fontWeight: "600", color: theme.colors.text },
   itemDescription: { fontSize: 13, color: theme.colors.textMuted, marginTop: 2 },
   itemPrice: { fontSize: 14, fontWeight: "700", color: theme.colors.primary, marginTop: 6 },
