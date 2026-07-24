@@ -32,6 +32,45 @@ menuRouter.post(
   }
 );
 
+const categoryUpdateSchema = categorySchema.partial();
+
+menuRouter.patch(
+  "/categories/:id",
+  requireAuth,
+  requireRole("RESTAURANT_ADMIN", "RESTAURANT_STAFF"),
+  async (req, res) => {
+    const parsed = categoryUpdateSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({ error: parsed.error.flatten() });
+    }
+    const category = await prisma.menuCategory.update({
+      where: { id: req.params.id },
+      data: parsed.data,
+    });
+    res.json(category);
+  }
+);
+
+menuRouter.delete(
+  "/categories/:id",
+  requireAuth,
+  requireRole("RESTAURANT_ADMIN", "RESTAURANT_STAFF"),
+  async (req, res) => {
+    const category = await prisma.menuCategory.findUnique({ where: { id: req.params.id } });
+    if (!category) return res.status(404).json({ error: "Category not found" });
+
+    const itemCount = await prisma.menuItem.count({ where: { categoryId: category.id } });
+    if (itemCount > 0) {
+      return res.status(400).json({
+        error: "Move or remove the items in this category before deleting it.",
+      });
+    }
+
+    await prisma.menuCategory.delete({ where: { id: category.id } });
+    res.status(204).end();
+  }
+);
+
 const itemSchema = z.object({
   categoryId: z.string().min(1),
   name: z.string().min(1),

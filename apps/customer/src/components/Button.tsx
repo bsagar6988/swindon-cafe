@@ -12,7 +12,7 @@ import { theme } from "@restaurant/shared";
 interface ButtonProps {
   title: string;
   onPress: () => void;
-  variant?: "primary" | "secondary" | "outline";
+  variant?: "primary" | "secondary" | "outline" | "danger";
   disabled?: boolean;
   loading?: boolean;
   style?: StyleProp<ViewStyle>;
@@ -35,6 +35,7 @@ export function Button({
         variant === "primary" && styles.primary,
         variant === "secondary" && styles.secondary,
         variant === "outline" && styles.outline,
+        variant === "danger" && styles.danger,
         (disabled || loading) && styles.disabled,
         pressed && styles.pressed,
         style,
@@ -71,6 +72,7 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     borderColor: theme.colors.primary,
   },
+  danger: { backgroundColor: theme.colors.danger },
   disabled: { opacity: 0.5 },
   pressed: { opacity: 0.85 },
   text: { color: "#fff", fontWeight: "700", fontSize: 15 },

@@ -41,6 +41,7 @@ export function serializeOrder(order: OrderWithRelations) {
       name: i.name,
       priceCents: i.priceCents,
       quantity: i.quantity,
+      notes: i.notes,
     })),
     subtotalCents: order.subtotalCents,
     deliveryFeeCents: order.deliveryFeeCents,

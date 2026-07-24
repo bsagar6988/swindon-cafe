@@ -54,6 +54,7 @@ export interface OrderItem {
   name: string;
   priceCents: number;
   quantity: number;
+  notes?: string | null;
 }
 
 export interface DeliveryAssignment {
@@ -86,6 +87,28 @@ export interface Order {
   updatedAt: string;
   assignment?: DeliveryAssignment | null;
   review?: Review | null;
+  customerOrderCount?: number;
+}
+
+export interface RestaurantSettings {
+  isOpen: boolean;
+}
+
+export interface AnalyticsDayBucket {
+  date: string;
+  orders: number;
+  revenueCents: number;
+}
+
+export interface AnalyticsBestSeller {
+  name: string;
+  quantity: number;
+}
+
+export interface AnalyticsSummary {
+  revenueTotalCents: number;
+  ordersPerDay: AnalyticsDayBucket[];
+  bestSellers: AnalyticsBestSeller[];
 }
 
 export interface Rider {

@@ -1,9 +1,21 @@
-import React, { useCallback, useEffect, useState } from "react";
-import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, View } from "react-native";
+import React, { useCallback, useState } from "react";
+import {
+  ActivityIndicator,
+  Alert,
+  FlatList,
+  Platform,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { theme, type Order } from "@restaurant/shared";
 import { useAuth } from "../context/AuthContext";
+import { useCart } from "../context/CartContext";
+import { useMenu } from "../context/MenuContext";
+import { Button } from "../components/Button";
 import type { RootStackParamList } from "../navigation/types";
 
 const STATUS_LABEL: Record<string, string> = {
@@ -19,6 +31,8 @@ const STATUS_LABEL: Record<string, string> = {
 export function OrderHistoryScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { api } = useAuth();
+  const { items: menuItems } = useMenu();
+  const { addItem } = useCart();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -37,6 +51,36 @@ export function OrderHistoryScreen() {
       load();
     }, [load])
   );
+
+  const orderAgain = (order: Order) => {
+    let addedCount = 0;
+    const skippedNames: string[] = [];
+
+    for (const orderItem of order.items) {
+      const menuItem = menuItems.find((m) => m.id === orderItem.menuItemId);
+      if (!menuItem || !menuItem.isAvailable) {
+        skippedNames.push(orderItem.name);
+        continue;
+      }
+      for (let i = 0; i < orderItem.quantity; i++) {
+        addItem(menuItem);
+      }
+      addedCount += 1;
+    }
+
+    if (skippedNames.length > 0) {
+      const message = `Added ${addedCount} of ${order.items.length} items — ${skippedNames.join(
+        ", "
+      )} ${skippedNames.length === 1 ? "is" : "are"} no longer available`;
+      if (Platform.OS === "web") {
+        window.alert(message);
+      } else {
+        Alert.alert("Some items were skipped", message);
+      }
+    }
+
+    navigation.navigate("MainTabs", { screen: "CartTab" });
+  };
 
   if (loading) {
     return (
@@ -61,21 +105,29 @@ export function OrderHistoryScreen() {
       data={orders}
       keyExtractor={(o) => o.id}
       renderItem={({ item }) => (
-        <Pressable
-          style={styles.card}
-          onPress={() => navigation.navigate("OrderTracking", { orderId: item.id })}
-        >
-          <View style={{ flex: 1 }}>
-            <Text style={styles.orderNumber}>Order #{item.id.slice(-6).toUpperCase()}</Text>
-            <Text style={styles.itemsSummary}>
-              {item.items.map((i) => `${i.quantity}× ${i.name}`).join(", ")}
-            </Text>
-          </View>
-          <View style={{ alignItems: "flex-end" }}>
-            <Text style={styles.status}>{STATUS_LABEL[item.status] ?? item.status}</Text>
-            <Text style={styles.total}>${(item.totalCents / 100).toFixed(2)}</Text>
-          </View>
-        </Pressable>
+        <View style={styles.card}>
+          <Pressable
+            style={styles.cardMain}
+            onPress={() => navigation.navigate("OrderTracking", { orderId: item.id })}
+          >
+            <View style={{ flex: 1 }}>
+              <Text style={styles.orderNumber}>Order #{item.id.slice(-6).toUpperCase()}</Text>
+              <Text style={styles.itemsSummary}>
+                {item.items.map((i) => `${i.quantity}× ${i.name}`).join(", ")}
+              </Text>
+            </View>
+            <View style={{ alignItems: "flex-end" }}>
+              <Text style={styles.status}>{STATUS_LABEL[item.status] ?? item.status}</Text>
+              <Text style={styles.total}>${(item.totalCents / 100).toFixed(2)}</Text>
+            </View>
+          </Pressable>
+          <Button
+            title="Order again"
+            variant="outline"
+            onPress={() => orderAgain(item)}
+            style={styles.orderAgainButton}
+          />
+        </View>
       )}
     />
   );
@@ -86,14 +138,17 @@ const styles = StyleSheet.create({
   center: { flex: 1, alignItems: "center", justifyContent: "center" },
   emptyTitle: { fontSize: 16, color: theme.colors.textMuted },
   card: {
-    flexDirection: "row",
-    justifyContent: "space-between",
     borderWidth: 1,
     borderColor: theme.colors.border,
     borderRadius: theme.radius.md,
     padding: theme.spacing(4),
     marginBottom: theme.spacing(3),
   },
+  cardMain: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+  orderAgainButton: { marginTop: theme.spacing(3) },
   orderNumber: { fontWeight: "700", color: theme.colors.text },
   itemsSummary: { fontSize: 12, color: theme.colors.textMuted, marginTop: 4, maxWidth: 220 },
   status: { fontWeight: "700", color: theme.colors.secondary, fontSize: 13 },

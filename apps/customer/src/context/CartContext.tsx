@@ -4,6 +4,7 @@ import type { MenuItem } from "@restaurant/shared";
 export interface CartLine {
   item: MenuItem;
   quantity: number;
+  notes?: string;
 }
 
 interface CartContextValue {
@@ -11,6 +12,7 @@ interface CartContextValue {
   addItem: (item: MenuItem) => void;
   decrementItem: (itemId: string) => void;
   removeItem: (itemId: string) => void;
+  setNotes: (itemId: string, notes: string) => void;
   clear: () => void;
   subtotalCents: number;
   totalQuantity: number;
@@ -45,6 +47,12 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     setLines((prev) => prev.filter((l) => l.item.id !== itemId));
   };
 
+  const setNotes = (itemId: string, notes: string) => {
+    setLines((prev) =>
+      prev.map((l) => (l.item.id === itemId ? { ...l, notes } : l))
+    );
+  };
+
   const clear = () => setLines([]);
 
   const subtotalCents = useMemo(
@@ -57,7 +65,16 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   );
 
   const value = useMemo(
-    () => ({ lines, addItem, decrementItem, removeItem, clear, subtotalCents, totalQuantity }),
+    () => ({
+      lines,
+      addItem,
+      decrementItem,
+      removeItem,
+      setNotes,
+      clear,
+      subtotalCents,
+      totalQuantity,
+    }),
     [lines, subtotalCents, totalQuantity]
   );
 

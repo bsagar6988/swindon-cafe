@@ -18,6 +18,7 @@ export function OrderDetailScreen({ route }: Props) {
   const [fallbackOrder, setFallbackOrder] = useState<Order | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [customerOrderCount, setCustomerOrderCount] = useState<number | null>(null);
 
   const order = contextOrder ?? fallbackOrder;
 
@@ -28,6 +29,25 @@ export function OrderDetailScreen({ route }: Props) {
       .then(setFallbackOrder)
       .catch((e) => setError(e instanceof Error ? e.message : "Failed to load order"));
   }, [contextOrder, orderId, api]);
+
+  // customerOrderCount is only present on the single-order fetch, never on the
+  // cached list data in OrdersContext — so fetch it here regardless of whether
+  // contextOrder already satisfies the rest of the screen.
+  useEffect(() => {
+    let cancelled = false;
+    setCustomerOrderCount(null);
+    api
+      .getOrder(orderId)
+      .then((o) => {
+        if (!cancelled) setCustomerOrderCount(o.customerOrderCount ?? null);
+      })
+      .catch(() => {
+        // non-fatal: leave the count unknown rather than blocking the screen
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [orderId, api]);
 
   if (!order) {
     return (
@@ -59,7 +79,11 @@ export function OrderDetailScreen({ route }: Props) {
       </Text>
 
       <Text style={styles.sectionTitle}>Customer</Text>
-      <Text style={styles.value}>{order.customerName}</Text>
+      <Text style={styles.value}>
+        {order.customerName}
+        {customerOrderCount !== null &&
+          ` · ${customerOrderCount} order${customerOrderCount === 1 ? "" : "s"} placed`}
+      </Text>
 
       <Text style={styles.sectionTitle}>Delivery address</Text>
       <Text style={styles.value}>

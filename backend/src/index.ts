@@ -8,6 +8,8 @@ import { ordersRouter } from "./routes/orders";
 import { deliveriesRouter } from "./routes/deliveries";
 import { addressesRouter } from "./routes/addresses";
 import { ridersRouter } from "./routes/riders";
+import { settingsRouter } from "./routes/settings";
+import { analyticsRouter } from "./routes/analytics";
 import { initRealtime } from "./realtime";
 
 const app = express();
@@ -22,6 +24,8 @@ app.use("/orders", ordersRouter);
 app.use("/deliveries", deliveriesRouter);
 app.use("/addresses", addressesRouter);
 app.use("/riders", ridersRouter);
+app.use("/settings", settingsRouter);
+app.use("/analytics", analyticsRouter);
 
 app.use((err: unknown, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
   console.error(err);

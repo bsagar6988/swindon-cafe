@@ -7,10 +7,49 @@ import React, {
   useState,
 } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as Notifications from "expo-notifications";
 import { createApiClient, type ApiClient, type AuthUser } from "@restaurant/shared";
 import { API_BASE_URL } from "../config";
 
 const TOKEN_KEY = "restaurant.customer.token";
+
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowBanner: true,
+    shouldShowList: true,
+    shouldPlaySound: false,
+    shouldSetBadge: false,
+  }),
+});
+
+// Best-effort: request permission, grab an Expo push token, and register it server-side.
+// This project has no EAS project configured (no projectId in app.json), so
+// getExpoPushTokenAsync() is expected to throw here (and always on web). Never let
+// this break login/signup.
+async function registerForPushNotifications(api: ApiClient) {
+  try {
+    const { status: existingStatus } = await Notifications.getPermissionsAsync();
+    let finalStatus = existingStatus;
+    if (existingStatus !== "granted") {
+      const { status } = await Notifications.requestPermissionsAsync();
+      finalStatus = status;
+    }
+    if (finalStatus !== "granted") return;
+
+    const tokenResponse = await Notifications.getExpoPushTokenAsync();
+    await api.registerPushToken(tokenResponse.data);
+  } catch (e) {
+    console.warn("Push notification registration skipped:", e);
+  }
+}
+
+async function clearPushToken(api: ApiClient) {
+  try {
+    await api.registerPushToken(null);
+  } catch (e) {
+    console.warn("Failed to clear push token:", e);
+  }
+}
 
 interface AuthContextValue {
   user: AuthUser | null;
@@ -59,6 +98,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     })();
   }, []);
 
+  // Once a user is signed in (login, signup, or restored session), best-effort
+  // register for push notifications. See registerForPushNotifications above for
+  // why this is wrapped so it can never throw / block the UI.
+  useEffect(() => {
+    if (user) {
+      registerForPushNotifications(api);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
+
   const login = useCallback(async (email: string, password: string) => {
     const tempApi = createApiClient({ baseUrl: API_BASE_URL, getToken: () => null });
     const { token: newToken, user: newUser } = await tempApi.login(email, password);
@@ -81,10 +130,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const logout = useCallback(async () => {
+    await clearPushToken(api);
     await AsyncStorage.removeItem(TOKEN_KEY);
     setToken(null);
     setUser(null);
-  }, []);
+  }, [api]);
 
   const value = useMemo(
     () => ({ user, token, loading, api, login, signup, logout }),

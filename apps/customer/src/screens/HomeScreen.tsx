@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Pressable,
@@ -10,13 +10,28 @@ import {
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { AppHeader, theme } from "@restaurant/shared";
+import { useAuth } from "../context/AuthContext";
 import { useMenu } from "../context/MenuContext";
 import { MenuItemThumbnail } from "../components/MenuItemThumbnail";
 import type { RootStackParamList } from "../navigation/types";
 
 export function HomeScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const { api } = useAuth();
   const { categories, items, loading, error, refresh } = useMenu();
+  const [isOpen, setIsOpen] = useState(true);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const settings = await api.getSettings();
+        setIsOpen(settings.isOpen);
+      } catch {
+        // If settings can't be fetched, don't block the menu on it.
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   if (loading) {
     return (
@@ -54,6 +69,13 @@ export function HomeScreen() {
       ListHeaderComponent={
         <View>
           <AppHeader />
+          {!isOpen && (
+            <View style={styles.closedBanner}>
+              <Text style={styles.closedBannerText}>
+                We're currently closed for orders
+              </Text>
+            </View>
+          )}
           <View style={styles.header}>
             <Text style={styles.title}>Our Menu</Text>
             <Text style={styles.subtitle}>Delivered fresh to your door</Text>
@@ -89,6 +111,12 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: theme.colors.background },
   center: { flex: 1, alignItems: "center", justifyContent: "center", padding: theme.spacing(6) },
   header: { padding: theme.spacing(5) },
+  closedBanner: {
+    backgroundColor: "#FBEBEB",
+    paddingVertical: theme.spacing(2),
+    paddingHorizontal: theme.spacing(5),
+  },
+  closedBannerText: { color: theme.colors.danger, fontWeight: "700", textAlign: "center" },
   title: { fontSize: 28, fontWeight: "800", color: theme.colors.text },
   subtitle: { fontSize: 14, color: theme.colors.textMuted, marginTop: 4 },
   sectionHeader: {

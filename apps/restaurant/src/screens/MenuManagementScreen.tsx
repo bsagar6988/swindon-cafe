@@ -1,6 +1,8 @@
 import React, { useCallback, useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -29,6 +31,16 @@ export function MenuManagementScreen() {
   const [categoryId, setCategoryId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+
+  const [showCategoryManager, setShowCategoryManager] = useState(false);
+  const [categoryError, setCategoryError] = useState<string | null>(null);
+  const [editingCategoryId, setEditingCategoryId] = useState<string | null>(null);
+  const [editCategoryName, setEditCategoryName] = useState("");
+  const [renamingId, setRenamingId] = useState<string | null>(null);
+  const [deletingCategoryId, setDeletingCategoryId] = useState<string | null>(null);
+  const [newCategoryName, setNewCategoryName] = useState("");
+  const [newCategorySortOrder, setNewCategorySortOrder] = useState("");
+  const [categorySaving, setCategorySaving] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -109,6 +121,98 @@ export function MenuManagementScreen() {
     }
   };
 
+  const onSubmitNewCategory = async () => {
+    setCategoryError(null);
+    if (!newCategoryName.trim()) {
+      setCategoryError("Category name is required");
+      return;
+    }
+    let sortOrder = categories.length;
+    if (newCategorySortOrder.trim()) {
+      const parsed = Number(newCategorySortOrder);
+      if (Number.isNaN(parsed)) {
+        setCategoryError("Enter a valid sort order number");
+        return;
+      }
+      sortOrder = parsed;
+    }
+    setCategorySaving(true);
+    try {
+      const created = await api.createCategory(newCategoryName.trim(), sortOrder);
+      setCategories((prev) => [...prev, created].sort((a, b) => a.sortOrder - b.sortOrder));
+      setNewCategoryName("");
+      setNewCategorySortOrder("");
+    } catch (e) {
+      setCategoryError(e instanceof Error ? e.message : "Failed to create category");
+    } finally {
+      setCategorySaving(false);
+    }
+  };
+
+  const startRenameCategory = (cat: MenuCategory) => {
+    setCategoryError(null);
+    setEditingCategoryId(cat.id);
+    setEditCategoryName(cat.name);
+  };
+
+  const cancelRenameCategory = () => {
+    setEditingCategoryId(null);
+    setEditCategoryName("");
+  };
+
+  const saveRenameCategory = async (cat: MenuCategory) => {
+    setCategoryError(null);
+    if (!editCategoryName.trim()) {
+      setCategoryError("Category name is required");
+      return;
+    }
+    setRenamingId(cat.id);
+    try {
+      const updated = await api.updateCategory(cat.id, { name: editCategoryName.trim() });
+      setCategories((prev) =>
+        prev
+          .map((c) => (c.id === cat.id ? updated : c))
+          .sort((a, b) => a.sortOrder - b.sortOrder)
+      );
+      setEditingCategoryId(null);
+      setEditCategoryName("");
+    } catch (e) {
+      setCategoryError(e instanceof Error ? e.message : "Failed to rename category");
+    } finally {
+      setRenamingId(null);
+    }
+  };
+
+  const deleteCategory = async (cat: MenuCategory) => {
+    setCategoryError(null);
+    setDeletingCategoryId(cat.id);
+    try {
+      await api.deleteCategory(cat.id);
+      setCategories((prev) => prev.filter((c) => c.id !== cat.id));
+      if (categoryId === cat.id) {
+        setCategoryId(null);
+      }
+    } catch (e) {
+      setCategoryError(e instanceof Error ? e.message : "Failed to delete category");
+    } finally {
+      setDeletingCategoryId(null);
+    }
+  };
+
+  const confirmDeleteCategory = (cat: MenuCategory) => {
+    const message = `Delete category "${cat.name}"?`;
+    if (Platform.OS === "web") {
+      if (window.confirm(message)) {
+        deleteCategory(cat);
+      }
+      return;
+    }
+    Alert.alert("Delete category", message, [
+      { text: "Cancel", style: "cancel" },
+      { text: "Delete", style: "destructive", onPress: () => deleteCategory(cat) },
+    ]);
+  };
+
   if (loading && items.length === 0) {
     return (
       <View style={styles.center}>
@@ -124,14 +228,114 @@ export function MenuManagementScreen() {
           <Text style={styles.title}>Menu management</Text>
           <Text style={styles.subtitle}>Toggle availability or add new items</Text>
         </View>
-        <Button
-          title={showForm ? "Close" : "Add item"}
-          variant={showForm ? "outline" : "primary"}
-          onPress={() => setShowForm((s) => !s)}
-        />
+        <View style={styles.headerButtons}>
+          <Button
+            title={showCategoryManager ? "Close" : "Manage categories"}
+            variant={showCategoryManager ? "outline" : "secondary"}
+            onPress={() => setShowCategoryManager((s) => !s)}
+            style={styles.headerButton}
+          />
+          <Button
+            title={showForm ? "Close" : "Add item"}
+            variant={showForm ? "outline" : "primary"}
+            onPress={() => setShowForm((s) => !s)}
+            style={styles.headerButton}
+          />
+        </View>
       </View>
 
       {error && <Text style={styles.error}>{error}</Text>}
+
+      {showCategoryManager && (
+        <View style={styles.form}>
+          <Text style={styles.formLabel}>Categories</Text>
+          {categoryError && <Text style={styles.error}>{categoryError}</Text>}
+
+          {categories.length === 0 ? (
+            <Text style={styles.emptyText}>No categories yet. Add one below.</Text>
+          ) : (
+            categories.map((cat) => {
+              const count = items.filter((i) => i.categoryId === cat.id).length;
+              const isEditing = editingCategoryId === cat.id;
+              return (
+                <View key={cat.id} style={styles.categoryManageRow}>
+                  {isEditing ? (
+                    <TextInput
+                      style={[styles.input, styles.categoryEditInput]}
+                      value={editCategoryName}
+                      onChangeText={setEditCategoryName}
+                      autoFocus
+                    />
+                  ) : (
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.itemName}>{cat.name}</Text>
+                      <Text style={styles.itemDescription}>
+                        {count} item{count === 1 ? "" : "s"}
+                      </Text>
+                    </View>
+                  )}
+                  <View style={styles.categoryManageActions}>
+                    {isEditing ? (
+                      <>
+                        <Button
+                          title="Save"
+                          onPress={() => saveRenameCategory(cat)}
+                          loading={renamingId === cat.id}
+                          style={styles.smallButton}
+                        />
+                        <Button
+                          title="Cancel"
+                          variant="outline"
+                          onPress={cancelRenameCategory}
+                          style={styles.smallButton}
+                        />
+                      </>
+                    ) : (
+                      <>
+                        <Button
+                          title="Rename"
+                          variant="outline"
+                          onPress={() => startRenameCategory(cat)}
+                          style={styles.smallButton}
+                        />
+                        <Button
+                          title="Delete"
+                          variant="danger"
+                          loading={deletingCategoryId === cat.id}
+                          onPress={() => confirmDeleteCategory(cat)}
+                          style={styles.smallButton}
+                        />
+                      </>
+                    )}
+                  </View>
+                </View>
+              );
+            })
+          )}
+
+          <Text style={[styles.formLabel, { marginTop: theme.spacing(4) }]}>Add category</Text>
+          <TextInput
+            style={styles.input}
+            value={newCategoryName}
+            onChangeText={setNewCategoryName}
+            placeholder="e.g. Desserts"
+          />
+          <Text style={styles.formLabel}>Sort order</Text>
+          <TextInput
+            style={styles.input}
+            value={newCategorySortOrder}
+            onChangeText={setNewCategorySortOrder}
+            placeholder={`e.g. ${categories.length}`}
+            keyboardType="number-pad"
+          />
+          <Button
+            title="Add category"
+            onPress={onSubmitNewCategory}
+            loading={categorySaving}
+            style={{ marginTop: theme.spacing(3) }}
+          />
+        </View>
+      )}
 
       {showForm && (
         <View style={styles.form}>
@@ -230,6 +434,21 @@ const styles = StyleSheet.create({
   title: { fontSize: 24, fontWeight: "800", color: theme.colors.text },
   subtitle: { fontSize: 13, color: theme.colors.textMuted, marginTop: 2 },
   error: { color: theme.colors.danger, marginBottom: theme.spacing(2) },
+  emptyText: { color: theme.colors.textMuted, marginBottom: theme.spacing(2) },
+  headerButtons: { flexDirection: "row", flexWrap: "wrap", gap: theme.spacing(2) },
+  headerButton: { paddingVertical: theme.spacing(2), paddingHorizontal: theme.spacing(3) },
+  categoryManageRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingVertical: theme.spacing(3),
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.border,
+    gap: theme.spacing(2),
+  },
+  categoryManageActions: { flexDirection: "row", gap: theme.spacing(1.5) },
+  categoryEditInput: { flex: 1, marginRight: theme.spacing(2) },
+  smallButton: { paddingVertical: theme.spacing(1.5), paddingHorizontal: theme.spacing(2.5) },
   form: {
     backgroundColor: theme.colors.surface,
     borderRadius: theme.radius.md,

@@ -1,3 +1,5 @@
+import type { NavigatorScreenParams } from "@react-navigation/native";
+
 export type AuthStackParamList = {
   Login: undefined;
   Signup: undefined;
@@ -11,8 +13,9 @@ export type MainTabParamList = {
 };
 
 export type RootStackParamList = {
-  MainTabs: undefined;
+  MainTabs: NavigatorScreenParams<MainTabParamList> | undefined;
   ItemDetail: { itemId: string };
   Checkout: undefined;
   OrderTracking: { orderId: string };
+  AddressBook: undefined;
 };

@@ -21,6 +21,7 @@ model User {
   passwordHash String
   role         String
   createdAt    DateTime @default(now())
+  pushToken    String?
 
   addresses           Address[]
   ordersAsCustomer    Order[]             @relation("CustomerOrders")
@@ -90,10 +91,11 @@ model Order {
 }
 
 model OrderItem {
-  id         String @id @default(cuid())
+  id         String  @id @default(cuid())
   name       String
   priceCents Int
   quantity   Int
+  notes      String?
 
   order      Order    @relation(fields: [orderId], references: [id])
   orderId    String
@@ -144,4 +146,10 @@ model Review {
   orderId    String @unique
   customer   User   @relation(fields: [customerId], references: [id])
   customerId String
+}
+
+// Singleton row (fixed id "singleton") holding store-wide settings.
+model RestaurantSettings {
+  id     String  @id @default(cuid())
+  isOpen Boolean @default(true)
 }

@@ -72,3 +72,19 @@ authRouter.get("/me", requireAuth, async (req, res) => {
   if (!user) return res.status(404).json({ error: "User not found" });
   res.json({ id: user.id, name: user.name, email: user.email, role: user.role });
 });
+
+const pushTokenSchema = z.object({
+  pushToken: z.string().min(1).nullable(),
+});
+
+authRouter.post("/push-token", requireAuth, async (req, res) => {
+  const parsed = pushTokenSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({ error: parsed.error.flatten() });
+  }
+  await prisma.user.update({
+    where: { id: req.auth!.sub },
+    data: { pushToken: parsed.data.pushToken },
+  });
+  res.status(204).end();
+});

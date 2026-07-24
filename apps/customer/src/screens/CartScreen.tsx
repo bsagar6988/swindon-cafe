@@ -1,5 +1,5 @@
 import React from "react";
-import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
+import { FlatList, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { theme } from "@restaurant/shared";
@@ -10,7 +10,7 @@ import type { RootStackParamList } from "../navigation/types";
 
 export function CartScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const { lines, addItem, decrementItem, removeItem, subtotalCents } = useCart();
+  const { lines, addItem, decrementItem, removeItem, setNotes, subtotalCents } = useCart();
 
   if (lines.length === 0) {
     return (
@@ -28,29 +28,37 @@ export function CartScreen() {
         keyExtractor={(l) => l.item.id}
         contentContainerStyle={{ padding: theme.spacing(5) }}
         renderItem={({ item: line }) => (
-          <View style={styles.row}>
-            <MenuItemThumbnail imageUrl={line.item.imageUrl} name={line.item.name} size={52} />
-            <View style={{ flex: 1, marginLeft: theme.spacing(3) }}>
-              <Text style={styles.name}>{line.item.name}</Text>
-              <Text style={styles.price}>
-                ${((line.item.priceCents * line.quantity) / 100).toFixed(2)}
-              </Text>
-            </View>
-            <View style={styles.qtyControls}>
-              <Pressable
-                style={styles.qtyButton}
-                onPress={() => decrementItem(line.item.id)}
-              >
-                <Text style={styles.qtyButtonText}>−</Text>
+          <View style={styles.lineContainer}>
+            <View style={styles.row}>
+              <MenuItemThumbnail imageUrl={line.item.imageUrl} name={line.item.name} size={52} />
+              <View style={{ flex: 1, marginLeft: theme.spacing(3) }}>
+                <Text style={styles.name}>{line.item.name}</Text>
+                <Text style={styles.price}>
+                  ${((line.item.priceCents * line.quantity) / 100).toFixed(2)}
+                </Text>
+              </View>
+              <View style={styles.qtyControls}>
+                <Pressable
+                  style={styles.qtyButton}
+                  onPress={() => decrementItem(line.item.id)}
+                >
+                  <Text style={styles.qtyButtonText}>−</Text>
+                </Pressable>
+                <Text style={styles.qty}>{line.quantity}</Text>
+                <Pressable style={styles.qtyButton} onPress={() => addItem(line.item)}>
+                  <Text style={styles.qtyButtonText}>+</Text>
+                </Pressable>
+              </View>
+              <Pressable onPress={() => removeItem(line.item.id)}>
+                <Text style={styles.remove}>Remove</Text>
               </Pressable>
-              <Text style={styles.qty}>{line.quantity}</Text>
-              <Pressable style={styles.qtyButton} onPress={() => addItem(line.item)}>
-                <Text style={styles.qtyButtonText}>+</Text>
-              </Pressable>
             </View>
-            <Pressable onPress={() => removeItem(line.item.id)}>
-              <Text style={styles.remove}>Remove</Text>
-            </Pressable>
+            <TextInput
+              style={styles.notesInput}
+              placeholder="Add cooking instructions (optional)"
+              value={line.notes ?? ""}
+              onChangeText={(text) => setNotes(line.item.id, text)}
+            />
           </View>
         )}
       />
@@ -70,12 +78,24 @@ const styles = StyleSheet.create({
   center: { flex: 1, alignItems: "center", justifyContent: "center", padding: theme.spacing(6) },
   emptyTitle: { fontSize: 18, fontWeight: "700", color: theme.colors.text },
   emptySubtitle: { fontSize: 14, color: theme.colors.textMuted, marginTop: 4 },
-  row: {
-    flexDirection: "row",
-    alignItems: "center",
+  lineContainer: {
     paddingVertical: theme.spacing(3),
     borderBottomWidth: 1,
     borderBottomColor: theme.colors.border,
+  },
+  row: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  notesInput: {
+    marginTop: theme.spacing(2),
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    borderRadius: theme.radius.md,
+    paddingHorizontal: theme.spacing(3),
+    paddingVertical: theme.spacing(2),
+    fontSize: 13,
+    color: theme.colors.text,
   },
   name: { fontSize: 15, fontWeight: "600", color: theme.colors.text },
   price: { fontSize: 13, color: theme.colors.textMuted, marginTop: 2 },

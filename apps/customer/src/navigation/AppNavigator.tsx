@@ -17,6 +17,7 @@ import { CheckoutScreen } from "../screens/CheckoutScreen";
 import { OrderHistoryScreen } from "../screens/OrderHistoryScreen";
 import { OrderTrackingScreen } from "../screens/OrderTrackingScreen";
 import { ProfileScreen } from "../screens/ProfileScreen";
+import { AddressBookScreen } from "../screens/AddressBookScreen";
 import type { AuthStackParamList, MainTabParamList, RootStackParamList } from "./types";
 
 const AuthStack = createNativeStackNavigator<AuthStackParamList>();
@@ -116,6 +117,11 @@ function MainNavigator() {
             name="OrderTracking"
             component={OrderTrackingScreen}
             options={{ title: "Track order", headerBackVisible: false }}
+          />
+          <RootStack.Screen
+            name="AddressBook"
+            component={AddressBookScreen}
+            options={{ title: "Manage addresses" }}
           />
         </RootStack.Navigator>
       </CartProvider>

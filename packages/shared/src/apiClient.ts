@@ -1,4 +1,5 @@
 import type {
+  AnalyticsSummary,
   AuthUser,
   MenuCategory,
   MenuItem,
@@ -6,6 +7,7 @@ import type {
   OrderStatus,
   Review,
   Rider,
+  RestaurantSettings,
   UserRole,
 } from "./types";
 
@@ -88,10 +90,14 @@ export function createApiClient(config: ApiClientConfig) {
         method: "POST",
         body: { name, sortOrder },
       }),
+    updateCategory: (id: string, patch: Partial<Omit<MenuCategory, "id">>) =>
+      request<MenuCategory>(`/menu/categories/${id}`, { method: "PATCH", body: patch }),
+    deleteCategory: (id: string) =>
+      request<void>(`/menu/categories/${id}`, { method: "DELETE" }),
 
     // orders
     createOrder: (payload: {
-      items: { menuItemId: string; quantity: number }[];
+      items: { menuItemId: string; quantity: number; notes?: string | null }[];
       addressId: string;
     }) => request<Order>("/orders", { method: "POST", body: payload }),
     getOrder: (id: string) => request<Order>(`/orders/${id}`),
@@ -123,6 +129,12 @@ export function createApiClient(config: ApiClientConfig) {
         method: "POST",
         body: address,
       }),
+    updateAddress: (id: string, patch: Partial<Omit<Order["deliveryAddress"], "id">>) =>
+      request<Order["deliveryAddress"]>(`/addresses/${id}`, {
+        method: "PATCH",
+        body: patch,
+      }),
+    deleteAddress: (id: string) => request<void>(`/addresses/${id}`, { method: "DELETE" }),
 
     // reviews
     createReview: (orderId: string, rating: number, comment?: string) =>
@@ -136,6 +148,19 @@ export function createApiClient(config: ApiClientConfig) {
     createRider: (name: string, email: string, password: string) =>
       request<Rider>("/riders", { method: "POST", body: { name, email, password } }),
     deleteRider: (id: string) => request<void>(`/riders/${id}`, { method: "DELETE" }),
+
+    // restaurant settings
+    getSettings: () => request<RestaurantSettings>("/settings"),
+    updateSettings: (isOpen: boolean) =>
+      request<RestaurantSettings>("/settings", { method: "PATCH", body: { isOpen } }),
+
+    // analytics (restaurant admin)
+    getAnalytics: (days?: number) =>
+      request<AnalyticsSummary>(`/analytics/summary${days ? `?days=${days}` : ""}`),
+
+    // push notifications
+    registerPushToken: (pushToken: string | null) =>
+      request<void>("/auth/push-token", { method: "POST", body: { pushToken } }),
   };
 }
 

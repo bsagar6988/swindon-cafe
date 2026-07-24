@@ -19,6 +19,21 @@ export function OrderTrackingScreen({ route }: Props) {
   const [draftComment, setDraftComment] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [reviewError, setReviewError] = useState<string | null>(null);
+  const [cancelling, setCancelling] = useState(false);
+  const [cancelError, setCancelError] = useState<string | null>(null);
+
+  const cancelOrder = async () => {
+    setCancelling(true);
+    setCancelError(null);
+    try {
+      await api.updateOrderStatus(route.params.orderId, "CANCELLED");
+      // the order's status updates via the live socket subscription above
+    } catch (e) {
+      setCancelError(e instanceof Error ? e.message : "Failed to cancel order");
+    } finally {
+      setCancelling(false);
+    }
+  };
 
   const submitReview = async () => {
     if (draftRating === 0) {
@@ -69,12 +84,28 @@ export function OrderTrackingScreen({ route }: Props) {
         <StatusStepper status={order.status} />
       </View>
 
+      {order.status === "PLACED" && (
+        <View>
+          {cancelError && <Text style={styles.error}>{cancelError}</Text>}
+          <Button
+            title="Cancel order"
+            variant="danger"
+            loading={cancelling}
+            onPress={cancelOrder}
+            style={styles.cancelButton}
+          />
+        </View>
+      )}
+
       <Text style={styles.sectionTitle}>Items</Text>
       {order.items.map((i) => (
         <View key={i.id} style={styles.itemRow}>
-          <Text style={styles.itemName}>
-            {i.quantity} × {i.name}
-          </Text>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.itemName}>
+              {i.quantity} × {i.name}
+            </Text>
+            {i.notes ? <Text style={styles.itemNotes}>Note: {i.notes}</Text> : null}
+          </View>
           <Text style={styles.itemPrice}>${((i.priceCents * i.quantity) / 100).toFixed(2)}</Text>
         </View>
       ))}
@@ -169,8 +200,10 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.background,
   },
   reviewButton: { marginTop: theme.spacing(3) },
+  cancelButton: { marginTop: theme.spacing(4) },
   itemRow: { flexDirection: "row", justifyContent: "space-between", marginBottom: theme.spacing(2) },
   itemName: { color: theme.colors.text },
+  itemNotes: { color: theme.colors.textMuted, fontSize: 12, marginTop: 2, fontStyle: "italic" },
   itemPrice: { color: theme.colors.textMuted, fontWeight: "600" },
   totalLabel: { fontWeight: "800", color: theme.colors.text },
   totalValue: { fontWeight: "800", color: theme.colors.primary },

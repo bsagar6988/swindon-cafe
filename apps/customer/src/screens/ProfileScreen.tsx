@@ -1,10 +1,14 @@
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
+import { useNavigation } from "@react-navigation/native";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { theme } from "@restaurant/shared";
 import { useAuth } from "../context/AuthContext";
 import { Button } from "../components/Button";
+import type { RootStackParamList } from "../navigation/types";
 
 export function ProfileScreen() {
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { user, logout } = useAuth();
 
   return (
@@ -15,7 +19,18 @@ export function ProfileScreen() {
       <Text style={styles.name}>{user?.name}</Text>
       <Text style={styles.email}>{user?.email}</Text>
 
-      <Button title="Log out" variant="outline" onPress={logout} style={styles.button} />
+      <Button
+        title="Manage addresses"
+        variant="secondary"
+        onPress={() => navigation.navigate("AddressBook")}
+        style={styles.button}
+      />
+      <Button
+        title="Log out"
+        variant="outline"
+        onPress={logout}
+        style={[styles.button, { marginTop: theme.spacing(3) }]}
+      />
     </View>
   );
 }

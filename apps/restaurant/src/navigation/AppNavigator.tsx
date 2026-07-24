@@ -8,6 +8,7 @@ import { theme } from "@restaurant/shared";
 import { useAuth } from "../context/AuthContext";
 import { OrdersProvider } from "../context/OrdersContext";
 import { LoginScreen } from "../screens/LoginScreen";
+import { DashboardScreen } from "../screens/DashboardScreen";
 import { OrdersQueueScreen } from "../screens/OrdersQueueScreen";
 import { OrderDetailScreen } from "../screens/OrderDetailScreen";
 import { MenuManagementScreen } from "../screens/MenuManagementScreen";
@@ -36,6 +37,14 @@ function MainTabs() {
         tabBarInactiveTintColor: theme.colors.textMuted,
       }}
     >
+      <Tab.Screen
+        name="DashboardTab"
+        component={DashboardScreen}
+        options={{
+          title: "Dashboard",
+          tabBarIcon: ({ color, size }) => <Ionicons name="stats-chart-outline" size={size} color={color} />,
+        }}
+      />
       <Tab.Screen
         name="OrdersTab"
         component={OrdersQueueScreen}

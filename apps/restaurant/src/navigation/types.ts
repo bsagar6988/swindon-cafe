@@ -3,6 +3,7 @@ export type AuthStackParamList = {
 };
 
 export type MainTabParamList = {
+  DashboardTab: undefined;
   OrdersTab: undefined;
   MenuTab: undefined;
   RidersTab: undefined;

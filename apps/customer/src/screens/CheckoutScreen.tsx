@@ -80,7 +80,11 @@ export function CheckoutScreen() {
     try {
       const order = await api.createOrder({
         addressId: selectedAddressId,
-        items: lines.map((l) => ({ menuItemId: l.item.id, quantity: l.quantity })),
+        items: lines.map((l) => ({
+          menuItemId: l.item.id,
+          quantity: l.quantity,
+          notes: l.notes || undefined,
+        })),
       });
       clear();
       navigation.replace("OrderTracking", { orderId: order.id });

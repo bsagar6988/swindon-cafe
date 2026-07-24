@@ -4,6 +4,8 @@ import { prisma } from "../prisma";
 import { requireAuth, requireRole } from "../auth";
 import { orderInclude, serializeOrder } from "../serializers";
 import { emitNewOrder, emitOrderUpdate } from "../realtime";
+import { getRestaurantSettings } from "./settings";
+import { ORDER_STATUS_PUSH_MESSAGES, sendPushNotification } from "../push";
 
 export const ordersRouter = Router();
 
@@ -16,6 +18,7 @@ const createOrderSchema = z.object({
       z.object({
         menuItemId: z.string().min(1),
         quantity: z.number().int().positive(),
+        notes: z.string().max(300).nullable().optional(),
       })
     )
     .min(1),
@@ -31,6 +34,13 @@ ordersRouter.post(
       return res.status(400).json({ error: parsed.error.flatten() });
     }
     const { addressId, items } = parsed.data;
+
+    const settings = await getRestaurantSettings();
+    if (!settings.isOpen) {
+      return res
+        .status(400)
+        .json({ error: "The restaurant is currently closed and not accepting orders." });
+    }
 
     const address = await prisma.address.findUnique({
       where: { id: addressId },
@@ -74,6 +84,7 @@ ordersRouter.post(
               name: menuItem.name,
               priceCents: menuItem.priceCents,
               quantity: i.quantity,
+              notes: i.notes ?? null,
             };
           }),
         },
@@ -94,7 +105,16 @@ ordersRouter.get("/:id", requireAuth, async (req, res) => {
     include: orderInclude,
   });
   if (!order) return res.status(404).json({ error: "Order not found" });
-  res.json(serializeOrder(order));
+
+  const serialized = serializeOrder(order);
+  if (req.auth!.role === "RESTAURANT_ADMIN" || req.auth!.role === "RESTAURANT_STAFF") {
+    const customerOrderCount = await prisma.order.count({
+      where: { customerId: order.customerId },
+    });
+    res.json({ ...serialized, customerOrderCount });
+    return;
+  }
+  res.json(serialized);
 });
 
 ordersRouter.get("/", requireAuth, async (req, res) => {
@@ -127,6 +147,10 @@ const RESTAURANT_TRANSITIONS: Record<string, string[]> = {
 
 const RIDER_TRANSITIONS: Record<string, string[]> = {
   OUT_FOR_DELIVERY: ["DELIVERED"],
+};
+
+const CUSTOMER_TRANSITIONS: Record<string, string[]> = {
+  PLACED: ["CANCELLED"],
 };
 
 const statusSchema = z.object({
@@ -172,6 +196,16 @@ ordersRouter.post("/:id/status", requireAuth, async (req, res) => {
         .status(400)
         .json({ error: `Cannot move order from ${order.status} to ${nextStatus}` });
     }
+  } else if (role === "CUSTOMER") {
+    if (order.customerId !== req.auth!.sub) {
+      return res.status(403).json({ error: "Not your order" });
+    }
+    const allowed = CUSTOMER_TRANSITIONS[order.status] ?? [];
+    if (!allowed.includes(nextStatus)) {
+      return res.status(400).json({
+        error: "This order can no longer be cancelled — the restaurant has already started on it.",
+      });
+    }
   } else {
     return res.status(403).json({ error: "Forbidden for this role" });
   }
@@ -187,6 +221,12 @@ ordersRouter.post("/:id/status", requireAuth, async (req, res) => {
 
   const serialized = serializeOrder(updated);
   emitOrderUpdate(order.id, serialized);
+
+  const pushMessage = ORDER_STATUS_PUSH_MESSAGES[nextStatus];
+  if (pushMessage && role !== "CUSTOMER") {
+    sendPushNotification(updated.customer.pushToken, "Order update", pushMessage);
+  }
+
   res.json(serialized);
 });
 
