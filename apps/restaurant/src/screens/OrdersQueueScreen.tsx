@@ -10,7 +10,15 @@ import {
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { AppHeader, formatUKTime, theme, type Order, type OrderStatus } from "@restaurant/shared";
+import {
+  AppHeader,
+  formatGBP,
+  formatUKTime,
+  isTodayUK,
+  theme,
+  type Order,
+  type OrderStatus,
+} from "@restaurant/shared";
 import { useOrders } from "../context/OrdersContext";
 import { Button } from "../components/Button";
 import { actionsFor, NON_TERMINAL_STATUSES, STATUS_COLOR, STATUS_LABEL } from "../statusActions";
@@ -23,6 +31,10 @@ export function OrdersQueueScreen() {
 
   const queue = orders
     .filter((o) => NON_TERMINAL_STATUSES.includes(o.status))
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+  const processedToday = orders
+    .filter((o) => !NON_TERMINAL_STATUSES.includes(o.status) && isTodayUK(o.createdAt))
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
   const onAction = async (order: Order, next: OrderStatus) => {
@@ -55,6 +67,50 @@ export function OrdersQueueScreen() {
     );
   }
 
+  const renderOrderCard = (item: Order) => {
+    const actions = actionsFor(item.status);
+    return (
+      <Pressable
+        key={item.id}
+        style={styles.card}
+        onPress={() => navigation.navigate("OrderDetail", { orderId: item.id })}
+      >
+        <View style={styles.cardTop}>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.orderNumber}>
+              #{item.id.slice(-6).toUpperCase()} · {item.customerName}
+            </Text>
+            <Text style={styles.itemsSummary} numberOfLines={2}>
+              {item.items.map((i) => `${i.quantity}× ${i.name}`).join(", ")}
+            </Text>
+          </View>
+          <View style={{ alignItems: "flex-end" }}>
+            <Text style={[styles.status, { color: STATUS_COLOR[item.status] }]}>
+              {STATUS_LABEL[item.status]}
+            </Text>
+            <Text style={styles.total}>{formatGBP(item.totalCents)}</Text>
+            <Text style={styles.placedTime}>{formatUKTime(item.createdAt)} UK</Text>
+          </View>
+        </View>
+
+        {actions.length > 0 && (
+          <View style={styles.actionsRow}>
+            {actions.map((a) => (
+              <Button
+                key={a.next}
+                title={a.label}
+                variant={a.variant}
+                loading={busyId === item.id}
+                onPress={() => onAction(item, a.next)}
+                style={styles.actionButton}
+              />
+            ))}
+          </View>
+        )}
+      </Pressable>
+    );
+  };
+
   return (
     <FlatList
       style={styles.container}
@@ -74,52 +130,27 @@ export function OrdersQueueScreen() {
         </View>
       }
       ListEmptyComponent={
-        <View style={styles.center}>
+        <View style={styles.emptyBox}>
           <Text style={styles.emptyTitle}>No active orders right now</Text>
         </View>
       }
-      renderItem={({ item }) => {
-        const actions = actionsFor(item.status);
-        return (
-          <Pressable
-            style={styles.card}
-            onPress={() => navigation.navigate("OrderDetail", { orderId: item.id })}
-          >
-            <View style={styles.cardTop}>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.orderNumber}>
-                  #{item.id.slice(-6).toUpperCase()} · {item.customerName}
-                </Text>
-                <Text style={styles.itemsSummary} numberOfLines={2}>
-                  {item.items.map((i) => `${i.quantity}× ${i.name}`).join(", ")}
-                </Text>
-              </View>
-              <View style={{ alignItems: "flex-end" }}>
-                <Text style={[styles.status, { color: STATUS_COLOR[item.status] }]}>
-                  {STATUS_LABEL[item.status]}
-                </Text>
-                <Text style={styles.total}>${(item.totalCents / 100).toFixed(2)}</Text>
-                <Text style={styles.placedTime}>{formatUKTime(item.createdAt)} UK</Text>
-              </View>
+      renderItem={({ item }) => renderOrderCard(item)}
+      ListFooterComponent={
+        <View style={styles.processedSection}>
+          <Text style={styles.title}>Processed today</Text>
+          <Text style={styles.subtitle}>
+            {processedToday.length} order{processedToday.length === 1 ? "" : "s"} completed or
+            cancelled today
+          </Text>
+          {processedToday.length === 0 ? (
+            <View style={styles.emptyBox}>
+              <Text style={styles.emptyTitle}>Nothing processed yet today</Text>
             </View>
-
-            {actions.length > 0 && (
-              <View style={styles.actionsRow}>
-                {actions.map((a) => (
-                  <Button
-                    key={a.next}
-                    title={a.label}
-                    variant={a.variant}
-                    loading={busyId === item.id}
-                    onPress={() => onAction(item, a.next)}
-                    style={styles.actionButton}
-                  />
-                ))}
-              </View>
-            )}
-          </Pressable>
-        );
-      }}
+          ) : (
+            processedToday.map((item) => renderOrderCard(item))
+          )}
+        </View>
+      }
     />
   );
 }
@@ -131,6 +162,13 @@ const styles = StyleSheet.create({
   title: { fontSize: 26, fontWeight: "800", color: theme.colors.text },
   subtitle: { fontSize: 14, color: theme.colors.textMuted, marginTop: 4, marginBottom: theme.spacing(2) },
   emptyTitle: { fontSize: 15, color: theme.colors.textMuted },
+  emptyBox: { paddingVertical: theme.spacing(4) },
+  processedSection: {
+    marginTop: theme.spacing(6),
+    paddingTop: theme.spacing(4),
+    borderTopWidth: 1,
+    borderTopColor: theme.colors.border,
+  },
   error: { color: theme.colors.danger, marginBottom: theme.spacing(2) },
   retry: { color: theme.colors.primary, fontWeight: "600" },
   card: {

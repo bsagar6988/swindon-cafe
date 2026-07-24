@@ -10,7 +10,7 @@ import {
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { theme, type Address } from "@restaurant/shared";
+import { formatGBP, theme, type Address } from "@restaurant/shared";
 import { useAuth } from "../context/AuthContext";
 import { useCart } from "../context/CartContext";
 import { Button } from "../components/Button";
@@ -149,22 +149,22 @@ export function CheckoutScreen() {
             {l.quantity} × {l.item.name}
           </Text>
           <Text style={styles.summaryValue}>
-            ${((l.item.priceCents * l.quantity) / 100).toFixed(2)}
+            {formatGBP(l.item.priceCents * l.quantity)}
           </Text>
         </View>
       ))}
       <View style={styles.summaryRow}>
         <Text style={styles.summaryLabel}>Subtotal</Text>
-        <Text style={styles.summaryValue}>${(subtotalCents / 100).toFixed(2)}</Text>
+        <Text style={styles.summaryValue}>{formatGBP(subtotalCents)}</Text>
       </View>
       <View style={styles.summaryRow}>
         <Text style={styles.summaryLabel}>Delivery fee</Text>
-        <Text style={styles.summaryValue}>${(DELIVERY_FEE_CENTS / 100).toFixed(2)}</Text>
+        <Text style={styles.summaryValue}>{formatGBP(DELIVERY_FEE_CENTS)}</Text>
       </View>
       <View style={styles.summaryRow}>
         <Text style={styles.totalLabel}>Total</Text>
         <Text style={styles.totalValue}>
-          ${((subtotalCents + DELIVERY_FEE_CENTS) / 100).toFixed(2)}
+          {formatGBP(subtotalCents + DELIVERY_FEE_CENTS)}
         </Text>
       </View>
 

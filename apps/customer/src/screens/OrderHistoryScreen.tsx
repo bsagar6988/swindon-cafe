@@ -11,7 +11,7 @@ import {
 } from "react-native";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { formatUKDateTime, theme, type Order } from "@restaurant/shared";
+import { formatGBP, formatUKDateTime, theme, type Order } from "@restaurant/shared";
 import { useAuth } from "../context/AuthContext";
 import { useCart } from "../context/CartContext";
 import { useMenu } from "../context/MenuContext";
@@ -119,7 +119,7 @@ export function OrderHistoryScreen() {
             </View>
             <View style={{ alignItems: "flex-end" }}>
               <Text style={styles.status}>{STATUS_LABEL[item.status] ?? item.status}</Text>
-              <Text style={styles.total}>${(item.totalCents / 100).toFixed(2)}</Text>
+              <Text style={styles.total}>{formatGBP(item.totalCents)}</Text>
             </View>
           </Pressable>
           <Button

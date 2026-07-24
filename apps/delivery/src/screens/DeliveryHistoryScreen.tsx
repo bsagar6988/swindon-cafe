@@ -2,7 +2,7 @@ import React, { useCallback, useState } from "react";
 import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, View } from "react-native";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { formatUKDateTime, theme, type Order } from "@restaurant/shared";
+import { formatGBP, formatUKDateTime, theme, type Order } from "@restaurant/shared";
 import { useAuth } from "../context/AuthContext";
 import type { RootStackParamList } from "../navigation/types";
 
@@ -87,7 +87,7 @@ export function DeliveryHistoryScreen() {
             >
               {STATUS_LABEL[item.status] ?? item.status}
             </Text>
-            <Text style={styles.total}>${(item.totalCents / 100).toFixed(2)}</Text>
+            <Text style={styles.total}>{formatGBP(item.totalCents)}</Text>
           </View>
         </Pressable>
       )}

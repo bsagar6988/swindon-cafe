@@ -2,7 +2,7 @@ import React from "react";
 import { FlatList, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { theme } from "@restaurant/shared";
+import { formatGBP, theme } from "@restaurant/shared";
 import { useCart } from "../context/CartContext";
 import { Button } from "../components/Button";
 import { MenuItemThumbnail } from "../components/MenuItemThumbnail";
@@ -34,7 +34,7 @@ export function CartScreen() {
               <View style={{ flex: 1, marginLeft: theme.spacing(3) }}>
                 <Text style={styles.name}>{line.item.name}</Text>
                 <Text style={styles.price}>
-                  ${((line.item.priceCents * line.quantity) / 100).toFixed(2)}
+                  {formatGBP(line.item.priceCents * line.quantity)}
                 </Text>
               </View>
               <View style={styles.qtyControls}>
@@ -65,7 +65,7 @@ export function CartScreen() {
       <View style={styles.footer}>
         <View style={styles.subtotalRow}>
           <Text style={styles.subtotalLabel}>Subtotal</Text>
-          <Text style={styles.subtotalValue}>${(subtotalCents / 100).toFixed(2)}</Text>
+          <Text style={styles.subtotalValue}>{formatGBP(subtotalCents)}</Text>
         </View>
         <Button title="Checkout" onPress={() => navigation.navigate("Checkout")} />
       </View>

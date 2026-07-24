@@ -1,7 +1,14 @@
 import React, { useEffect, useState } from "react";
 import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from "react-native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
-import { formatUKDateTime, formatUKTime, theme, type Order, type OrderStatus } from "@restaurant/shared";
+import {
+  formatGBP,
+  formatUKDateTime,
+  formatUKTime,
+  theme,
+  type Order,
+  type OrderStatus,
+} from "@restaurant/shared";
 import { useOrders } from "../context/OrdersContext";
 import { useAuth } from "../context/AuthContext";
 import { Button } from "../components/Button";
@@ -99,21 +106,21 @@ export function OrderDetailScreen({ route }: Props) {
           <Text style={styles.itemName}>
             {i.quantity} × {i.name}
           </Text>
-          <Text style={styles.itemPrice}>${((i.priceCents * i.quantity) / 100).toFixed(2)}</Text>
+          <Text style={styles.itemPrice}>{formatGBP(i.priceCents * i.quantity)}</Text>
         </View>
       ))}
 
       <View style={styles.itemRow}>
         <Text style={styles.totalLabelSmall}>Subtotal</Text>
-        <Text style={styles.itemPrice}>${(order.subtotalCents / 100).toFixed(2)}</Text>
+        <Text style={styles.itemPrice}>{formatGBP(order.subtotalCents)}</Text>
       </View>
       <View style={styles.itemRow}>
         <Text style={styles.totalLabelSmall}>Delivery fee</Text>
-        <Text style={styles.itemPrice}>${(order.deliveryFeeCents / 100).toFixed(2)}</Text>
+        <Text style={styles.itemPrice}>{formatGBP(order.deliveryFeeCents)}</Text>
       </View>
       <View style={styles.itemRow}>
         <Text style={styles.totalLabel}>Total</Text>
-        <Text style={styles.totalValue}>${(order.totalCents / 100).toFixed(2)}</Text>
+        <Text style={styles.totalValue}>{formatGBP(order.totalCents)}</Text>
       </View>
 
       {order.statusEvents.length > 0 && (

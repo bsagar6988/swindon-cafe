@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { ActivityIndicator, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
-import { formatUKDateTime, theme } from "@restaurant/shared";
+import { formatGBP, formatUKDateTime, theme } from "@restaurant/shared";
 import { useAuth } from "../context/AuthContext";
 import { useOrderTracking } from "../hooks/useOrderTracking";
 import { StatusStepper } from "../components/StatusStepper";
@@ -107,13 +107,13 @@ export function OrderTrackingScreen({ route }: Props) {
             </Text>
             {i.notes ? <Text style={styles.itemNotes}>Note: {i.notes}</Text> : null}
           </View>
-          <Text style={styles.itemPrice}>${((i.priceCents * i.quantity) / 100).toFixed(2)}</Text>
+          <Text style={styles.itemPrice}>{formatGBP(i.priceCents * i.quantity)}</Text>
         </View>
       ))}
 
       <View style={styles.itemRow}>
         <Text style={styles.totalLabel}>Total</Text>
-        <Text style={styles.totalValue}>${(order.totalCents / 100).toFixed(2)}</Text>
+        <Text style={styles.totalValue}>{formatGBP(order.totalCents)}</Text>
       </View>
 
       <Text style={styles.sectionTitle}>Delivering to</Text>

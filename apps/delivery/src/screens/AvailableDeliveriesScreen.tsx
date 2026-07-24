@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { ActivityIndicator, FlatList, StyleSheet, Text, View } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { AppHeader, formatUKTime, theme } from "@restaurant/shared";
+import { AppHeader, formatGBP, formatUKTime, theme } from "@restaurant/shared";
 import { useAuth } from "../context/AuthContext";
 import { useAvailableDeliveries } from "../hooks/useAvailableDeliveries";
 import { Button } from "../components/Button";
@@ -64,7 +64,7 @@ export function AvailableDeliveriesScreen() {
             <View style={styles.card}>
               <View style={styles.cardHeader}>
                 <Text style={styles.orderNumber}>Order #{item.id.slice(-6).toUpperCase()}</Text>
-                <Text style={styles.total}>${(item.totalCents / 100).toFixed(2)}</Text>
+                <Text style={styles.total}>{formatGBP(item.totalCents)}</Text>
               </View>
               <Text style={styles.customer}>{item.customerName}</Text>
               <Text style={styles.addressSummary}>

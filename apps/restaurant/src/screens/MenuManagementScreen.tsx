@@ -12,7 +12,7 @@ import {
   View,
 } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
-import { theme, type MenuCategory, type MenuItem } from "@restaurant/shared";
+import { formatGBP, theme, type MenuCategory, type MenuItem } from "@restaurant/shared";
 import { useAuth } from "../context/AuthContext";
 import { Button } from "../components/Button";
 
@@ -90,8 +90,8 @@ export function MenuManagementScreen() {
       setFormError("Name is required");
       return;
     }
-    const dollars = Number(price);
-    if (!price || Number.isNaN(dollars) || dollars < 0) {
+    const pounds = Number(price);
+    if (!price || Number.isNaN(pounds) || pounds < 0) {
       setFormError("Enter a valid price");
       return;
     }
@@ -105,7 +105,7 @@ export function MenuManagementScreen() {
         categoryId,
         name: name.trim(),
         description: description.trim() || null,
-        priceCents: Math.round(dollars * 100),
+        priceCents: Math.round(pounds * 100),
         imageUrl: null,
         isAvailable: true,
       });
@@ -350,7 +350,7 @@ export function MenuManagementScreen() {
             placeholder="Optional description"
           />
 
-          <Text style={styles.formLabel}>Price (USD)</Text>
+          <Text style={styles.formLabel}>Price (GBP)</Text>
           <TextInput
             style={styles.input}
             value={price}
@@ -400,7 +400,7 @@ export function MenuManagementScreen() {
                       {item.description}
                     </Text>
                   )}
-                  <Text style={styles.itemPrice}>${(item.priceCents / 100).toFixed(2)}</Text>
+                  <Text style={styles.itemPrice}>{formatGBP(item.priceCents)}</Text>
                 </View>
                 <View style={styles.availableCol}>
                   <Text style={styles.availableLabel}>

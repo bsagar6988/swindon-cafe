@@ -1,7 +1,7 @@
 import React, { useCallback, useState } from "react";
 import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
-import { theme, type AnalyticsSummary } from "@restaurant/shared";
+import { formatGBP, theme, type AnalyticsSummary } from "@restaurant/shared";
 import { useAuth } from "../context/AuthContext";
 
 export function DashboardScreen() {
@@ -38,11 +38,7 @@ export function DashboardScreen() {
     );
   }
 
-  const revenue = summary ? summary.revenueTotalCents / 100 : 0;
-  const revenueLabel = `$${revenue.toLocaleString(undefined, {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })} total revenue`;
+  const revenueLabel = `${formatGBP(summary?.revenueTotalCents ?? 0)} total revenue`;
 
   const ordersPerDay = summary?.ordersPerDay ?? [];
   const maxOrders = Math.max(1, ...ordersPerDay.map((d) => d.orders));

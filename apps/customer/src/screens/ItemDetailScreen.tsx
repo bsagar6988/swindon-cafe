@@ -1,7 +1,7 @@
 import React from "react";
 import { Image, StyleSheet, Text, View } from "react-native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
-import { theme } from "@restaurant/shared";
+import { formatGBP, theme } from "@restaurant/shared";
 import { useMenu } from "../context/MenuContext";
 import { useCart } from "../context/CartContext";
 import { Button } from "../components/Button";
@@ -33,7 +33,7 @@ export function ItemDetailScreen({ route, navigation }: Props) {
       )}
       <Text style={styles.name}>{item.name}</Text>
       {item.description && <Text style={styles.description}>{item.description}</Text>}
-      <Text style={styles.price}>${(item.priceCents / 100).toFixed(2)}</Text>
+      <Text style={styles.price}>{formatGBP(item.priceCents)}</Text>
 
       <Button
         title={item.isAvailable ? "Add to cart" : "Currently unavailable"}

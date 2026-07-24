@@ -9,7 +9,7 @@ import {
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { AppHeader, theme } from "@restaurant/shared";
+import { AppHeader, formatGBP, theme } from "@restaurant/shared";
 import { useAuth } from "../context/AuthContext";
 import { useMenu } from "../context/MenuContext";
 import { MenuItemThumbnail } from "../components/MenuItemThumbnail";
@@ -98,7 +98,7 @@ export function HomeScreen() {
                 {item.description}
               </Text>
             )}
-            <Text style={styles.itemPrice}>${(item.priceCents / 100).toFixed(2)}</Text>
+            <Text style={styles.itemPrice}>{formatGBP(item.priceCents)}</Text>
           </View>
           {!item.isAvailable && <Text style={styles.unavailable}>Sold out</Text>}
         </Pressable>
