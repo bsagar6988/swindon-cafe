@@ -88,6 +88,7 @@ export interface Order {
   assignment?: DeliveryAssignment | null;
   review?: Review | null;
   customerOrderCount?: number;
+  statusEvents: OrderStatusEvent[];
 }
 
 export interface RestaurantSettings {
@@ -119,7 +120,6 @@ export interface Rider {
 }
 
 export interface OrderStatusEvent {
-  orderId: string;
   status: OrderStatus;
   at: string;
 }

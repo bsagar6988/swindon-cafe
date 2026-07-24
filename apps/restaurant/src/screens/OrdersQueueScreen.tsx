@@ -10,7 +10,7 @@ import {
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { AppHeader, theme, type Order, type OrderStatus } from "@restaurant/shared";
+import { AppHeader, formatUKTime, theme, type Order, type OrderStatus } from "@restaurant/shared";
 import { useOrders } from "../context/OrdersContext";
 import { Button } from "../components/Button";
 import { actionsFor, NON_TERMINAL_STATUSES, STATUS_COLOR, STATUS_LABEL } from "../statusActions";
@@ -99,6 +99,7 @@ export function OrdersQueueScreen() {
                   {STATUS_LABEL[item.status]}
                 </Text>
                 <Text style={styles.total}>${(item.totalCents / 100).toFixed(2)}</Text>
+                <Text style={styles.placedTime}>{formatUKTime(item.createdAt)} UK</Text>
               </View>
             </View>
 
@@ -145,6 +146,7 @@ const styles = StyleSheet.create({
   itemsSummary: { fontSize: 12, color: theme.colors.textMuted, marginTop: 4, maxWidth: 220 },
   status: { fontWeight: "700", fontSize: 13 },
   total: { color: theme.colors.text, marginTop: 4, fontWeight: "600" },
+  placedTime: { color: theme.colors.textMuted, marginTop: 2, fontSize: 11 },
   actionsRow: { flexDirection: "row", marginTop: theme.spacing(3), gap: theme.spacing(2) },
   actionButton: { flex: 1, paddingVertical: theme.spacing(2) },
 });

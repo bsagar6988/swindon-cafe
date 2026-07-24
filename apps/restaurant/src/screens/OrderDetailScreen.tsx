@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from "react-native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
-import { theme, type Order, type OrderStatus } from "@restaurant/shared";
+import { formatUKDateTime, formatUKTime, theme, type Order, type OrderStatus } from "@restaurant/shared";
 import { useOrders } from "../context/OrdersContext";
 import { useAuth } from "../context/AuthContext";
 import { Button } from "../components/Button";
@@ -77,6 +77,7 @@ export function OrderDetailScreen({ route }: Props) {
       <Text style={[styles.statusBadge, { color: STATUS_COLOR[order.status] }]}>
         {STATUS_LABEL[order.status]}
       </Text>
+      <Text style={styles.placedTime}>Placed {formatUKDateTime(order.createdAt)} UK</Text>
 
       <Text style={styles.sectionTitle}>Customer</Text>
       <Text style={styles.value}>
@@ -115,6 +116,18 @@ export function OrderDetailScreen({ route }: Props) {
         <Text style={styles.totalValue}>${(order.totalCents / 100).toFixed(2)}</Text>
       </View>
 
+      {order.statusEvents.length > 0 && (
+        <>
+          <Text style={styles.sectionTitle}>Timeline (UK time)</Text>
+          {order.statusEvents.map((e) => (
+            <View key={e.status} style={styles.timelineRow}>
+              <Text style={styles.timelineStatus}>{STATUS_LABEL[e.status] ?? e.status}</Text>
+              <Text style={styles.timelineTime}>{formatUKTime(e.at)}</Text>
+            </View>
+          ))}
+        </>
+      )}
+
       {error && <Text style={styles.error}>{error}</Text>}
 
       {actions.length > 0 && (
@@ -141,6 +154,7 @@ const styles = StyleSheet.create({
   error: { color: theme.colors.danger, marginTop: theme.spacing(3) },
   orderNumber: { fontSize: 20, fontWeight: "800", color: theme.colors.text },
   statusBadge: { fontSize: 15, fontWeight: "700", marginTop: theme.spacing(1) },
+  placedTime: { fontSize: 12, color: theme.colors.textMuted, marginTop: 4 },
   sectionTitle: {
     fontSize: 14,
     fontWeight: "800",
@@ -158,4 +172,13 @@ const styles = StyleSheet.create({
   totalValue: { fontWeight: "800", color: theme.colors.primary },
   actionsRow: { flexDirection: "row", marginTop: theme.spacing(6), gap: theme.spacing(2) },
   actionButton: { flex: 1 },
+  timelineRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingVertical: theme.spacing(1.5),
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.border,
+  },
+  timelineStatus: { color: theme.colors.text, fontSize: 13 },
+  timelineTime: { color: theme.colors.textMuted, fontSize: 13, fontWeight: "600" },
 });

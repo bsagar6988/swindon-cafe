@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { ActivityIndicator, FlatList, StyleSheet, Text, View } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { AppHeader, theme } from "@restaurant/shared";
+import { AppHeader, formatUKTime, theme } from "@restaurant/shared";
 import { useAuth } from "../context/AuthContext";
 import { useAvailableDeliveries } from "../hooks/useAvailableDeliveries";
 import { Button } from "../components/Button";
@@ -71,7 +71,8 @@ export function AvailableDeliveriesScreen() {
                 {item.deliveryAddress.line1}, {item.deliveryAddress.city}
               </Text>
               <Text style={styles.meta}>
-                {item.items.length} item{item.items.length === 1 ? "" : "s"}
+                {item.items.length} item{item.items.length === 1 ? "" : "s"} · placed{" "}
+                {formatUKTime(item.createdAt)} UK
               </Text>
               <Button
                 title="Accept delivery"

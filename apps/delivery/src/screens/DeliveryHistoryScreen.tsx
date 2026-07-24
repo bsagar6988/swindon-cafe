@@ -2,7 +2,7 @@ import React, { useCallback, useState } from "react";
 import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, View } from "react-native";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { theme, type Order } from "@restaurant/shared";
+import { formatUKDateTime, theme, type Order } from "@restaurant/shared";
 import { useAuth } from "../context/AuthContext";
 import type { RootStackParamList } from "../navigation/types";
 
@@ -71,6 +71,7 @@ export function DeliveryHistoryScreen() {
         >
           <View style={{ flex: 1 }}>
             <Text style={styles.orderNumber}>Order #{item.id.slice(-6).toUpperCase()}</Text>
+            <Text style={styles.placedTime}>{formatUKDateTime(item.createdAt)} UK</Text>
             <Text style={styles.customer}>{item.customerName}</Text>
             <Text style={styles.itemsSummary}>
               {item.items.map((i) => `${i.quantity}× ${i.name}`).join(", ")}
@@ -114,6 +115,7 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing(3),
   },
   orderNumber: { fontWeight: "700", color: theme.colors.text },
+  placedTime: { fontSize: 11, color: theme.colors.textMuted, marginTop: 2 },
   customer: { fontSize: 12, color: theme.colors.text, marginTop: 2, fontWeight: "600" },
   itemsSummary: { fontSize: 12, color: theme.colors.textMuted, marginTop: 4, maxWidth: 220 },
   status: { fontWeight: "700", color: theme.colors.textMuted, fontSize: 13 },

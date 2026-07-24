@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from "react-native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
-import { theme } from "@restaurant/shared";
+import { formatUKDateTime, theme } from "@restaurant/shared";
 import { useAuth } from "../context/AuthContext";
 import { useOrderTracking } from "../hooks/useOrderTracking";
 import { StatusStepper } from "../components/StatusStepper";
@@ -81,12 +81,13 @@ export function ActiveDeliveryScreen({ route }: Props) {
   return (
     <ScrollView style={styles.container} contentContainerStyle={{ padding: theme.spacing(5) }}>
       <Text style={styles.orderNumber}>Order #{order.id.slice(-6).toUpperCase()}</Text>
+      <Text style={styles.placedTime}>Placed {formatUKDateTime(order.createdAt)} UK</Text>
       <RouteProgress status={order.status} />
 
       <Text style={styles.customerNote}>Customer: {order.customerName}</Text>
 
       <View style={styles.stepperCard}>
-        <StatusStepper status={order.status} />
+        <StatusStepper status={order.status} events={order.statusEvents} />
       </View>
 
       <Text style={styles.sectionTitle}>Items</Text>
@@ -162,6 +163,7 @@ const styles = StyleSheet.create({
   center: { flex: 1, alignItems: "center", justifyContent: "center" },
   error: { color: theme.colors.danger, marginTop: theme.spacing(2) },
   orderNumber: { fontSize: 20, fontWeight: "800", color: theme.colors.text },
+  placedTime: { fontSize: 12, color: theme.colors.textMuted, marginTop: 2 },
   customerNote: {
     textAlign: "center",
     color: theme.colors.text,
