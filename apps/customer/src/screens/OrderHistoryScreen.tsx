@@ -11,7 +11,7 @@ import {
 } from "react-native";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { formatGBP, formatUKDateTime, theme, type Order } from "@restaurant/shared";
+import { AppHeader, formatGBP, formatUKDateTime, theme, type Order } from "@restaurant/shared";
 import { useAuth } from "../context/AuthContext";
 import { useCart } from "../context/CartContext";
 import { useMenu } from "../context/MenuContext";
@@ -84,16 +84,22 @@ export function OrderHistoryScreen() {
 
   if (loading) {
     return (
-      <View style={styles.center}>
-        <ActivityIndicator color={theme.colors.primary} size="large" />
+      <View style={styles.container}>
+        <AppHeader subtitle="Order history" />
+        <View style={styles.center}>
+          <ActivityIndicator color={theme.colors.primary} size="large" />
+        </View>
       </View>
     );
   }
 
   if (orders.length === 0) {
     return (
-      <View style={styles.center}>
-        <Text style={styles.emptyTitle}>No orders yet</Text>
+      <View style={styles.container}>
+        <AppHeader subtitle="Order history" />
+        <View style={styles.center}>
+          <Text style={styles.emptyTitle}>No orders yet</Text>
+        </View>
       </View>
     );
   }
@@ -104,6 +110,7 @@ export function OrderHistoryScreen() {
       contentContainerStyle={{ padding: theme.spacing(5) }}
       data={orders}
       keyExtractor={(o) => o.id}
+      ListHeaderComponent={<AppHeader subtitle="Order history" />}
       renderItem={({ item }) => (
         <View style={styles.card}>
           <Pressable

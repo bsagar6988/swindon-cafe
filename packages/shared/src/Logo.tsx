@@ -1,64 +1,108 @@
 import React from "react";
-import Svg, { Circle, Ellipse, Line, Path, Rect, Text as SvgText } from "react-native-svg";
+import Svg, { Circle, Text as SvgText } from "react-native-svg";
+
+const CX = 512;
+const CY = 512;
+
+interface ArcChar {
+  char: string;
+  x: number;
+  y: number;
+  rotate: number;
+}
+
+// Places each character of `text` along a circular arc of the given radius,
+// between angleStart and angleEnd (degrees, 0 = 12 o'clock, clockwise
+// positive). react-native-svg's TextPath support is unreliable across
+// platforms, so arced text is laid out character-by-character instead.
+function arcChars(text: string, radius: number, angleStart: number, angleEnd: number): ArcChar[] {
+  const chars = text.split("");
+  const n = chars.length;
+  return chars.map((char, i) => {
+    const t = n === 1 ? 0.5 : i / (n - 1);
+    const angle = angleStart + (angleEnd - angleStart) * t;
+    const rad = (angle * Math.PI) / 180;
+    return {
+      char,
+      x: CX + radius * Math.sin(rad),
+      y: CY - radius * Math.cos(rad),
+      rotate: angle,
+    };
+  });
+}
+
+function ArcText({
+  text,
+  radius,
+  angleStart,
+  angleEnd,
+  fontSize,
+  flip,
+}: {
+  text: string;
+  radius: number;
+  angleStart: number;
+  angleEnd: number;
+  fontSize: number;
+  flip: boolean;
+}) {
+  const items = arcChars(text, radius, angleStart, angleEnd);
+  return (
+    <>
+      {items.map((item, i) => (
+        <SvgText
+          key={i}
+          x={item.x}
+          y={item.y}
+          rotation={flip ? item.rotate + 180 : item.rotate}
+          origin={`${item.x}, ${item.y}`}
+          textAnchor="middle"
+          fontFamily="Arial, Helvetica, sans-serif"
+          fontWeight="900"
+          fontSize={fontSize}
+          fill="#141414"
+        >
+          {item.char}
+        </SvgText>
+      ))}
+    </>
+  );
+}
+
+const BADGE_TEXT = "• TASTE OF THE TOWN •";
 
 export function Logo({ size = 96 }: { size?: number }) {
   return (
     <Svg width={size} height={size} viewBox="0 0 1024 1024">
-      <Rect x={0} y={0} width={1024} height={1024} fill="none" />
+      <Circle cx={CX} cy={CY} r={505} fill="#F5C518" />
 
-      <Circle cx={512} cy={512} r={460} fill="none" stroke="#E85D2A" strokeWidth={14} />
-      <Circle cx={512} cy={512} r={430} fill="none" stroke="#1F8A70" strokeWidth={6} />
-
-      <Ellipse cx={512} cy={520} rx={170} ry={24} fill="none" stroke="#1F8A70" strokeWidth={10} />
-      <Path
-        d="M 382 340 L 642 340 L 607 494 Q 606 500 600 500 L 424 500 Q 418 500 417 494 Z"
-        fill="#1F8A70"
-      />
-      <Path
-        d="M 632 366 C 696 366 696 456 632 452"
-        fill="none"
-        stroke="#1F8A70"
-        strokeWidth={16}
-        strokeLinecap="round"
-      />
-      <Ellipse cx={512} cy={340} rx={130} ry={18} fill="#FBF6EF" stroke="#1F8A70" strokeWidth={6} />
-
-      <Path d="M 462 300 C 448 272 474 258 460 228" fill="none" stroke="#E85D2A" strokeWidth={9} strokeLinecap="round" />
-      <Path d="M 512 300 C 498 268 524 254 510 220" fill="none" stroke="#E85D2A" strokeWidth={9} strokeLinecap="round" />
-      <Path d="M 562 300 C 548 272 574 258 560 228" fill="none" stroke="#E85D2A" strokeWidth={9} strokeLinecap="round" />
+      <ArcText text={BADGE_TEXT} radius={400} angleStart={-62} angleEnd={62} fontSize={40} flip={false} />
+      <ArcText text={BADGE_TEXT} radius={400} angleStart={242} angleEnd={118} fontSize={40} flip={true} />
 
       <SvgText
         x={512}
-        y={650}
+        y={565}
         textAnchor="middle"
-        fontFamily="Georgia, 'Times New Roman', serif"
-        fontWeight="700"
-        fontSize={76}
-        letterSpacing={8}
-        fill="#1A1A1A"
+        fontFamily="Arial, Helvetica, sans-serif"
+        fontWeight="900"
+        fontSize={128}
+        letterSpacing={2}
+        fill="#141414"
       >
         SWINDON
       </SvgText>
-
-      <Line x1={392} y1={685} x2={477} y2={685} stroke="#E85D2A" strokeWidth={3} />
-      <Line x1={547} y1={685} x2={632} y2={685} stroke="#E85D2A" strokeWidth={3} />
-      <Rect x={502} y={675} width={20} height={20} fill="#E85D2A" transform="rotate(45 512 685)" />
-
       <SvgText
         x={512}
-        y={762}
+        y={760}
         textAnchor="middle"
-        fontFamily="Georgia, 'Times New Roman', serif"
-        fontWeight="700"
-        fontSize={64}
-        letterSpacing={14}
-        fill="#1F8A70"
+        fontFamily="Arial, Helvetica, sans-serif"
+        fontWeight="900"
+        fontSize={220}
+        letterSpacing={4}
+        fill="#141414"
       >
-        CAFÉ
+        EATS
       </SvgText>
-
-      <Circle cx={252} cy={754} r={5} fill="#E85D2A" />
-      <Circle cx={772} cy={754} r={5} fill="#E85D2A" />
     </Svg>
   );
 }

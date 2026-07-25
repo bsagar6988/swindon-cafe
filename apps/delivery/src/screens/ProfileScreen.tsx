@@ -1,6 +1,6 @@
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
-import { theme } from "@restaurant/shared";
+import { AppHeader, theme } from "@restaurant/shared";
 import { useAuth } from "../context/AuthContext";
 import { Button } from "../components/Button";
 
@@ -9,14 +9,17 @@ export function ProfileScreen() {
 
   return (
     <View style={styles.container}>
-      <View style={styles.avatar}>
-        <Text style={styles.avatarText}>{user?.name?.[0] ?? "?"}</Text>
-      </View>
-      <Text style={styles.name}>{user?.name}</Text>
-      <Text style={styles.email}>{user?.email}</Text>
-      <Text style={styles.role}>Delivery rider</Text>
+      <AppHeader subtitle="Profile" />
+      <View style={styles.content}>
+        <View style={styles.avatar}>
+          <Text style={styles.avatarText}>{user?.name?.[0] ?? "?"}</Text>
+        </View>
+        <Text style={styles.name}>{user?.name}</Text>
+        <Text style={styles.email}>{user?.email}</Text>
+        <Text style={styles.role}>Delivery rider</Text>
 
-      <Button title="Log out" variant="outline" onPress={logout} style={styles.button} />
+        <Button title="Log out" variant="outline" onPress={logout} style={styles.button} />
+      </View>
     </View>
   );
 }
@@ -24,9 +27,12 @@ export function ProfileScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: "center",
-    paddingTop: theme.spacing(10),
     backgroundColor: theme.colors.background,
+  },
+  content: {
+    flex: 1,
+    alignItems: "center",
+    paddingTop: theme.spacing(8),
   },
   avatar: {
     width: 88,

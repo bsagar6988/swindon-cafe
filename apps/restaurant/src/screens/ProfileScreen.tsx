@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { StyleSheet, Switch, Text, View } from "react-native";
-import { theme } from "@restaurant/shared";
+import { AppHeader, theme } from "@restaurant/shared";
 import { useAuth } from "../context/AuthContext";
 import { Button } from "../components/Button";
 
@@ -36,34 +36,37 @@ export function ProfileScreen() {
 
   return (
     <View style={styles.container}>
-      <View style={styles.avatar}>
-        <Text style={styles.avatarText}>{user?.name?.[0] ?? "?"}</Text>
-      </View>
-      <Text style={styles.name}>{user?.name}</Text>
-      <Text style={styles.email}>{user?.email}</Text>
-      <Text style={styles.role}>{user?.role}</Text>
-
-      <View style={styles.settingsCard}>
-        <View style={{ flex: 1 }}>
-          <Text style={styles.settingsLabel}>Store is open for orders</Text>
-          <Text style={styles.settingsHint}>
-            {isOpen === null
-              ? "Loading..."
-              : isOpen
-              ? "Customers can place new orders"
-              : "Customers cannot place new orders"}
-          </Text>
+      <AppHeader subtitle="Profile" />
+      <View style={styles.content}>
+        <View style={styles.avatar}>
+          <Text style={styles.avatarText}>{user?.name?.[0] ?? "?"}</Text>
         </View>
-        <Switch
-          value={!!isOpen}
-          onValueChange={onToggleOpen}
-          disabled={isOpen === null || savingOpen}
-          trackColor={{ true: theme.colors.secondary, false: theme.colors.border }}
-        />
-      </View>
-      {settingsError && <Text style={styles.error}>{settingsError}</Text>}
+        <Text style={styles.name}>{user?.name}</Text>
+        <Text style={styles.email}>{user?.email}</Text>
+        <Text style={styles.role}>{user?.role}</Text>
 
-      <Button title="Log out" variant="outline" onPress={logout} style={styles.button} />
+        <View style={styles.settingsCard}>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.settingsLabel}>Store is open for orders</Text>
+            <Text style={styles.settingsHint}>
+              {isOpen === null
+                ? "Loading..."
+                : isOpen
+                ? "Customers can place new orders"
+                : "Customers cannot place new orders"}
+            </Text>
+          </View>
+          <Switch
+            value={!!isOpen}
+            onValueChange={onToggleOpen}
+            disabled={isOpen === null || savingOpen}
+            trackColor={{ true: theme.colors.secondary, false: theme.colors.border }}
+          />
+        </View>
+        {settingsError && <Text style={styles.error}>{settingsError}</Text>}
+
+        <Button title="Log out" variant="outline" onPress={logout} style={styles.button} />
+      </View>
     </View>
   );
 }
@@ -71,9 +74,12 @@ export function ProfileScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: "center",
-    paddingTop: theme.spacing(10),
     backgroundColor: theme.colors.background,
+  },
+  content: {
+    flex: 1,
+    alignItems: "center",
+    paddingTop: theme.spacing(8),
   },
   avatar: {
     width: 88,

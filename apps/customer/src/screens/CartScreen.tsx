@@ -2,7 +2,7 @@ import React from "react";
 import { FlatList, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { formatGBP, theme } from "@restaurant/shared";
+import { AppHeader, formatGBP, theme } from "@restaurant/shared";
 import { useCart } from "../context/CartContext";
 import { Button } from "../components/Button";
 import { MenuItemThumbnail } from "../components/MenuItemThumbnail";
@@ -14,9 +14,12 @@ export function CartScreen() {
 
   if (lines.length === 0) {
     return (
-      <View style={styles.center}>
-        <Text style={styles.emptyTitle}>Your cart is empty</Text>
-        <Text style={styles.emptySubtitle}>Add something tasty from the menu</Text>
+      <View style={styles.container}>
+        <AppHeader subtitle="Cart" />
+        <View style={styles.center}>
+          <Text style={styles.emptyTitle}>Your cart is empty</Text>
+          <Text style={styles.emptySubtitle}>Add something tasty from the menu</Text>
+        </View>
       </View>
     );
   }
@@ -27,6 +30,7 @@ export function CartScreen() {
         data={lines}
         keyExtractor={(l) => l.item.id}
         contentContainerStyle={{ padding: theme.spacing(5) }}
+        ListHeaderComponent={<AppHeader subtitle="Cart" />}
         renderItem={({ item: line }) => (
           <View style={styles.lineContainer}>
             <View style={styles.row}>

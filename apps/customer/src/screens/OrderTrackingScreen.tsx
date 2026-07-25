@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { ActivityIndicator, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
-import { formatGBP, formatUKDateTime, theme } from "@restaurant/shared";
+import { AppHeader, formatGBP, formatUKDateTime, theme } from "@restaurant/shared";
 import { useAuth } from "../context/AuthContext";
 import { useOrderTracking } from "../hooks/useOrderTracking";
 import { StatusStepper } from "../components/StatusStepper";
@@ -54,22 +54,29 @@ export function OrderTrackingScreen({ route }: Props) {
 
   if (error) {
     return (
-      <View style={styles.center}>
-        <Text style={styles.error}>{error}</Text>
+      <View style={styles.container}>
+        <AppHeader subtitle="Order tracking" />
+        <View style={styles.center}>
+          <Text style={styles.error}>{error}</Text>
+        </View>
       </View>
     );
   }
 
   if (!order) {
     return (
-      <View style={styles.center}>
-        <ActivityIndicator color={theme.colors.primary} size="large" />
+      <View style={styles.container}>
+        <AppHeader subtitle="Order tracking" />
+        <View style={styles.center}>
+          <ActivityIndicator color={theme.colors.primary} size="large" />
+        </View>
       </View>
     );
   }
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={{ padding: theme.spacing(5) }}>
+      <AppHeader subtitle="Order tracking" />
       <Text style={styles.orderNumber}>Order #{order.id.slice(-6).toUpperCase()}</Text>
       <Text style={styles.placedTime}>Placed {formatUKDateTime(order.createdAt)} UK</Text>
       <RouteProgress status={order.status} />

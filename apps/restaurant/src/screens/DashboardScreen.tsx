@@ -1,7 +1,7 @@
 import React, { useCallback, useState } from "react";
 import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
-import { formatGBP, theme, type AnalyticsSummary } from "@restaurant/shared";
+import { AppHeader, formatGBP, theme, type AnalyticsSummary } from "@restaurant/shared";
 import { useAuth } from "../context/AuthContext";
 
 export function DashboardScreen() {
@@ -32,8 +32,11 @@ export function DashboardScreen() {
 
   if (loading && !summary) {
     return (
-      <View style={styles.center}>
-        <ActivityIndicator color={theme.colors.primary} size="large" />
+      <View style={styles.container}>
+        <AppHeader subtitle="Dashboard" />
+        <View style={styles.center}>
+          <ActivityIndicator color={theme.colors.primary} size="large" />
+        </View>
       </View>
     );
   }
@@ -49,6 +52,7 @@ export function DashboardScreen() {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={{ padding: theme.spacing(5) }}>
+      <AppHeader subtitle="Dashboard" />
       <Text style={styles.title}>Dashboard</Text>
       <Text style={styles.subtitle}>Sales performance at a glance</Text>
 

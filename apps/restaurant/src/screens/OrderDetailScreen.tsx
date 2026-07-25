@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from "react-native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import {
+  AppHeader,
   formatGBP,
   formatUKDateTime,
   formatUKTime,
@@ -58,8 +59,11 @@ export function OrderDetailScreen({ route }: Props) {
 
   if (!order) {
     return (
-      <View style={styles.center}>
-        {error ? <Text style={styles.error}>{error}</Text> : <ActivityIndicator color={theme.colors.primary} size="large" />}
+      <View style={styles.container}>
+        <AppHeader subtitle="Order" />
+        <View style={styles.center}>
+          {error ? <Text style={styles.error}>{error}</Text> : <ActivityIndicator color={theme.colors.primary} size="large" />}
+        </View>
       </View>
     );
   }
@@ -80,6 +84,7 @@ export function OrderDetailScreen({ route }: Props) {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={{ padding: theme.spacing(5) }}>
+      <AppHeader subtitle="Order" />
       <Text style={styles.orderNumber}>Order #{order.id.slice(-6).toUpperCase()}</Text>
       <Text style={[styles.statusBadge, { color: STATUS_COLOR[order.status] }]}>
         {STATUS_LABEL[order.status]}

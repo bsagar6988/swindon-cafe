@@ -12,7 +12,7 @@ import {
   View,
 } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
-import { formatGBP, theme, type MenuCategory, type MenuItem } from "@restaurant/shared";
+import { AppHeader, formatGBP, theme, type MenuCategory, type MenuItem } from "@restaurant/shared";
 import { useAuth } from "../context/AuthContext";
 import { Button } from "../components/Button";
 
@@ -215,14 +215,18 @@ export function MenuManagementScreen() {
 
   if (loading && items.length === 0) {
     return (
-      <View style={styles.center}>
-        <ActivityIndicator color={theme.colors.primary} size="large" />
+      <View style={styles.container}>
+        <AppHeader subtitle="Menu management" />
+        <View style={styles.center}>
+          <ActivityIndicator color={theme.colors.primary} size="large" />
+        </View>
       </View>
     );
   }
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={{ padding: theme.spacing(5) }}>
+      <AppHeader subtitle="Menu management" />
       <View style={styles.headerRow}>
         <View>
           <Text style={styles.title}>Menu management</Text>

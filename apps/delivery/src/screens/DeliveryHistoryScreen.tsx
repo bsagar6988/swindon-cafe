@@ -2,7 +2,7 @@ import React, { useCallback, useState } from "react";
 import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, View } from "react-native";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { formatGBP, formatUKDateTime, theme, type Order } from "@restaurant/shared";
+import { AppHeader, formatGBP, formatUKDateTime, theme, type Order } from "@restaurant/shared";
 import { useAuth } from "../context/AuthContext";
 import type { RootStackParamList } from "../navigation/types";
 
@@ -43,17 +43,23 @@ export function DeliveryHistoryScreen() {
 
   if (loading) {
     return (
-      <View style={styles.center}>
-        <ActivityIndicator color={theme.colors.primary} size="large" />
+      <View style={styles.container}>
+        <AppHeader subtitle="Delivery history" />
+        <View style={styles.center}>
+          <ActivityIndicator color={theme.colors.primary} size="large" />
+        </View>
       </View>
     );
   }
 
   if (orders.length === 0) {
     return (
-      <View style={styles.center}>
-        <Text style={styles.emptyTitle}>No deliveries yet</Text>
-        <Text style={styles.emptySubtitle}>Accepted and completed deliveries will show up here.</Text>
+      <View style={styles.container}>
+        <AppHeader subtitle="Delivery history" />
+        <View style={styles.center}>
+          <Text style={styles.emptyTitle}>No deliveries yet</Text>
+          <Text style={styles.emptySubtitle}>Accepted and completed deliveries will show up here.</Text>
+        </View>
       </View>
     );
   }
@@ -64,6 +70,7 @@ export function DeliveryHistoryScreen() {
       contentContainerStyle={{ padding: theme.spacing(5) }}
       data={orders}
       keyExtractor={(o) => o.id}
+      ListHeaderComponent={<AppHeader subtitle="Delivery history" />}
       renderItem={({ item }) => (
         <Pressable
           style={styles.card}

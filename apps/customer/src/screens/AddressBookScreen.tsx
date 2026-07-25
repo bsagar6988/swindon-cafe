@@ -10,7 +10,7 @@ import {
   View,
 } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
-import { theme, type Address } from "@restaurant/shared";
+import { AppHeader, theme, type Address } from "@restaurant/shared";
 import { useAuth } from "../context/AuthContext";
 import { Button } from "../components/Button";
 
@@ -130,6 +130,7 @@ export function AddressBookScreen() {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={{ padding: theme.spacing(5) }}>
+      <AppHeader subtitle="Address book" />
       <Text style={styles.title}>Saved addresses</Text>
 
       {error && <Text style={styles.error}>{error}</Text>}

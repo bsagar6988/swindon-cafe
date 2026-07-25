@@ -1,7 +1,7 @@
 import React, { useState } from "react";
-import { KeyboardAvoidingView, Platform, StyleSheet, Text, TextInput } from "react-native";
+import { KeyboardAvoidingView, Platform, StyleSheet, Text, TextInput, View } from "react-native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
-import { theme } from "@restaurant/shared";
+import { Logo, theme } from "@restaurant/shared";
 import { useAuth } from "../context/AuthContext";
 import { Button } from "../components/Button";
 import type { AuthStackParamList } from "../navigation/types";
@@ -33,6 +33,9 @@ export function SignupScreen({ navigation }: Props) {
       style={styles.container}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
+      <View style={styles.logoWrap}>
+        <Logo size={80} />
+      </View>
       <Text style={styles.title}>Create your account</Text>
 
       <TextInput style={styles.input} placeholder="Full name" value={name} onChangeText={setName} />
@@ -72,6 +75,7 @@ const styles = StyleSheet.create({
     padding: theme.spacing(6),
     backgroundColor: theme.colors.background,
   },
+  logoWrap: { alignItems: "center", marginBottom: theme.spacing(4) },
   title: { fontSize: 26, fontWeight: "800", color: theme.colors.text, marginBottom: theme.spacing(6) },
   input: {
     borderWidth: 1,

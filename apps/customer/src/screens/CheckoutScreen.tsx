@@ -10,7 +10,7 @@ import {
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { formatGBP, theme, type Address } from "@restaurant/shared";
+import { AppHeader, formatGBP, theme, type Address } from "@restaurant/shared";
 import { useAuth } from "../context/AuthContext";
 import { useCart } from "../context/CartContext";
 import { Button } from "../components/Button";
@@ -105,6 +105,7 @@ export function CheckoutScreen() {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={{ padding: theme.spacing(5) }}>
+      <AppHeader subtitle="Checkout" />
       <Text style={styles.sectionTitle}>Delivery address</Text>
 
       {addresses.map((addr) => (

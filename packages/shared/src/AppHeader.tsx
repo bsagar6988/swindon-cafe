@@ -8,7 +8,7 @@ export function AppHeader({ subtitle }: { subtitle?: string }) {
     <View style={styles.row}>
       <Logo size={36} />
       <View style={styles.textCol}>
-        <Text style={styles.brand}>Swindon Cafe</Text>
+        <Text style={styles.brand}>Swindon Eats</Text>
         {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
       </View>
     </View>

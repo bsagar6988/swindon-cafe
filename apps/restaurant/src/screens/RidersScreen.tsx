@@ -10,7 +10,7 @@ import {
   View,
 } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
-import { theme, type Rider } from "@restaurant/shared";
+import { AppHeader, theme, type Rider } from "@restaurant/shared";
 import { useAuth } from "../context/AuthContext";
 import { Button } from "../components/Button";
 
@@ -97,14 +97,18 @@ export function RidersScreen() {
 
   if (loading && riders.length === 0) {
     return (
-      <View style={styles.center}>
-        <ActivityIndicator color={theme.colors.primary} size="large" />
+      <View style={styles.container}>
+        <AppHeader subtitle="Riders" />
+        <View style={styles.center}>
+          <ActivityIndicator color={theme.colors.primary} size="large" />
+        </View>
       </View>
     );
   }
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={{ padding: theme.spacing(5) }}>
+      <AppHeader subtitle="Riders" />
       <View style={styles.headerRow}>
         <View>
           <Text style={styles.title}>Riders</Text>

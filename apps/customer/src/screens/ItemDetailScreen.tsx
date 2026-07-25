@@ -1,7 +1,7 @@
 import React from "react";
 import { Image, StyleSheet, Text, View } from "react-native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
-import { formatGBP, theme } from "@restaurant/shared";
+import { AppHeader, formatGBP, theme } from "@restaurant/shared";
 import { useMenu } from "../context/MenuContext";
 import { useCart } from "../context/CartContext";
 import { Button } from "../components/Button";
@@ -16,14 +16,18 @@ export function ItemDetailScreen({ route, navigation }: Props) {
 
   if (!item) {
     return (
-      <View style={styles.center}>
-        <Text>Item not found.</Text>
+      <View style={styles.container}>
+        <AppHeader subtitle="Item" />
+        <View style={styles.center}>
+          <Text>Item not found.</Text>
+        </View>
       </View>
     );
   }
 
   return (
     <View style={styles.container}>
+      <AppHeader subtitle="Item" />
       {item.imageUrl ? (
         <Image source={{ uri: item.imageUrl }} style={styles.image} resizeMode="contain" />
       ) : (
