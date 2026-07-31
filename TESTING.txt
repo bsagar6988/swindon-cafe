@@ -1,0 +1,59 @@
+SWINDON EATS - TEST GUIDE
+=========================
+
+LIVE APPS
+---------
+Customer app:    https://customer-swindon-cafe.vercel.app
+Restaurant app:  https://restaurant-swindon-cafe.vercel.app
+Delivery app:    https://delivery-swindon-cafe.vercel.app
+
+All 3 are web apps - just open the links in a browser, no install needed.
+
+
+TEST ACCOUNTS
+-------------
+Password for every account below: password123
+
+Customer app:
+  customer@example.com        (Casey Customer)
+  gnanashekhar@example.com    (Gnanashekhar)
+  loganathan@example.com      (Loganathan)
+  - or tap "Create an account" to sign up as a new customer
+
+Restaurant app:
+  superadmin@example.com      (Platform admin - manages all restaurants)
+  admin@example.com           (Restaurant admin - Swindon Eats)
+  wok-admin@example.com       (Restaurant admin - Golden Wok)
+
+Delivery app:
+  rider@example.com           (Dana Delivery)
+
+
+SUGGESTED TEST FLOW
+--------------------
+1. Customer app  - log in, pick a restaurant, add items to cart, check out.
+2. Restaurant app - log in as the matching restaurant admin, accept the
+   order in the Orders queue, move it to Preparing then Ready.
+3. Delivery app  - log in as the rider, accept the delivery once it's
+   ready, mark it out for delivery, then Delivered.
+4. Customer app  - refresh order tracking to see the status update live,
+   and leave a rating once delivered.
+
+Other things worth trying:
+- Add an item from Swindon Eats, then try adding one from Golden Wok -
+  the app warns before clearing your cart to switch restaurants.
+- Log in as superadmin@example.com and add a brand new restaurant (with
+  its own admin login), then log in as that new admin to confirm it
+  starts empty.
+- Profile > Legal & Help / About Swindon Eats in the customer app.
+- Cancel an order from the customer app before the restaurant accepts it.
+- Restaurant admin's Profile tab > Store open/closed toggle - closing it
+  blocks new customer orders.
+
+
+NOTES
+-----
+- Payment is cash / pay-on-delivery for this version - no real card
+  payment is processed.
+- This is a demo project - addresses, phone numbers, and business names
+  are placeholders.
