@@ -78,6 +78,7 @@ export function DeliveryHistoryScreen() {
         >
           <View style={{ flex: 1 }}>
             <Text style={styles.orderNumber}>Order #{item.id.slice(-6).toUpperCase()}</Text>
+            <Text style={styles.restaurantName}>{item.restaurantName}</Text>
             <Text style={styles.placedTime}>{formatUKDateTime(item.createdAt)} UK</Text>
             <Text style={styles.customer}>{item.customerName}</Text>
             <Text style={styles.itemsSummary}>
@@ -122,6 +123,7 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing(3),
   },
   orderNumber: { fontWeight: "700", color: theme.colors.text },
+  restaurantName: { fontSize: 11, color: theme.colors.primary, fontWeight: "700", marginTop: 2 },
   placedTime: { fontSize: 11, color: theme.colors.textMuted, marginTop: 2 },
   customer: { fontSize: 12, color: theme.colors.text, marginTop: 2, fontWeight: "600" },
   itemsSummary: { fontSize: 12, color: theme.colors.textMuted, marginTop: 4, maxWidth: 220 },

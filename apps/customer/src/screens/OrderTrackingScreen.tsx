@@ -78,6 +78,7 @@ export function OrderTrackingScreen({ route }: Props) {
     <ScrollView style={styles.container} contentContainerStyle={{ padding: theme.spacing(5) }}>
       <AppHeader subtitle="Order tracking" />
       <Text style={styles.orderNumber}>Order #{order.id.slice(-6).toUpperCase()}</Text>
+      <Text style={styles.restaurantName}>{order.restaurantName}</Text>
       <Text style={styles.placedTime}>Placed {formatUKDateTime(order.createdAt)} UK</Text>
       <RouteProgress status={order.status} />
 
@@ -170,6 +171,7 @@ const styles = StyleSheet.create({
   center: { flex: 1, alignItems: "center", justifyContent: "center" },
   error: { color: theme.colors.danger },
   orderNumber: { fontSize: 20, fontWeight: "800", color: theme.colors.text },
+  restaurantName: { fontSize: 14, color: theme.colors.primary, fontWeight: "700", marginTop: 4 },
   placedTime: { fontSize: 12, color: theme.colors.textMuted, marginTop: 2 },
   riderNote: {
     textAlign: "center",

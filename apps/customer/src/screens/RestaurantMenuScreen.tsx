@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Pressable,
@@ -7,31 +7,54 @@ import {
   Text,
   View,
 } from "react-native";
-import { useNavigation } from "@react-navigation/native";
+import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { AppHeader, formatGBP, theme } from "@restaurant/shared";
+import type { NativeStackScreenProps } from "@react-navigation/native-stack";
+import { formatGBP, theme, type MenuCategory, type MenuItem, type Restaurant } from "@restaurant/shared";
 import { useAuth } from "../context/AuthContext";
-import { useMenu } from "../context/MenuContext";
 import { MenuItemThumbnail } from "../components/MenuItemThumbnail";
 import type { RootStackParamList } from "../navigation/types";
 
-export function HomeScreen() {
+type Props = NativeStackScreenProps<RootStackParamList, "RestaurantMenu">;
+
+export function RestaurantMenuScreen({ route }: Props) {
+  const { restaurantId } = route.params;
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { api } = useAuth();
-  const { categories, items, loading, error, refresh } = useMenu();
-  const [isOpen, setIsOpen] = useState(true);
+  const [restaurant, setRestaurant] = useState<Restaurant | null>(null);
+  const [categories, setCategories] = useState<MenuCategory[]>([]);
+  const [items, setItems] = useState<MenuItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const [restaurantDetail, menu] = await Promise.all([
+        api.getRestaurant(restaurantId),
+        api.getMenu(restaurantId),
+      ]);
+      setRestaurant(restaurantDetail);
+      setCategories(menu.categories);
+      setItems(menu.items);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to load menu");
+    } finally {
+      setLoading(false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [api, restaurantId]);
+
+  useFocusEffect(
+    useCallback(() => {
+      load();
+    }, [load])
+  );
 
   useEffect(() => {
-    (async () => {
-      try {
-        const settings = await api.getSettings();
-        setIsOpen(settings.isOpen);
-      } catch {
-        // If settings can't be fetched, don't block the menu on it.
-      }
-    })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    navigation.setOptions({ title: restaurant?.name ?? "Menu" });
+  }, [navigation, restaurant]);
 
   if (loading) {
     return (
@@ -45,7 +68,7 @@ export function HomeScreen() {
     return (
       <View style={styles.center}>
         <Text style={styles.error}>{error}</Text>
-        <Pressable onPress={refresh}>
+        <Pressable onPress={load}>
           <Text style={styles.retry}>Tap to retry</Text>
         </Pressable>
       </View>
@@ -68,17 +91,16 @@ export function HomeScreen() {
       keyExtractor={(item) => item.id}
       ListHeaderComponent={
         <View>
-          <AppHeader />
-          {!isOpen && (
+          {restaurant && !restaurant.isOpen && (
             <View style={styles.closedBanner}>
               <Text style={styles.closedBannerText}>
-                We're currently closed for orders
+                {restaurant.name} is currently closed for orders
               </Text>
             </View>
           )}
           <View style={styles.header}>
-            <Text style={styles.title}>Our Menu</Text>
-            <Text style={styles.subtitle}>Delivered fresh to your door</Text>
+            <Text style={styles.title}>{restaurant?.name ?? "Menu"}</Text>
+            {restaurant?.address && <Text style={styles.subtitle}>{restaurant.address}</Text>}
           </View>
         </View>
       }
@@ -88,7 +110,7 @@ export function HomeScreen() {
       renderItem={({ item }) => (
         <Pressable
           style={styles.itemRow}
-          onPress={() => navigation.navigate("ItemDetail", { itemId: item.id })}
+          onPress={() => navigation.navigate("ItemDetail", { item, restaurantId })}
         >
           <MenuItemThumbnail imageUrl={item.imageUrl} name={item.name} size={64} />
           <View style={styles.itemInfo}>

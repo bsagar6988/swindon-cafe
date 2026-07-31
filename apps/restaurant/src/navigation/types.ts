@@ -10,6 +10,11 @@ export type MainTabParamList = {
   ProfileTab: undefined;
 };
 
+export type AppAdminTabParamList = {
+  RestaurantsTab: undefined;
+  ProfileTab: undefined;
+};
+
 export type RootStackParamList = {
   MainTabs: undefined;
   OrderDetail: { orderId: string };

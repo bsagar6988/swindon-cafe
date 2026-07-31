@@ -4,7 +4,6 @@ import { prisma } from "../prisma";
 import { requireAuth, requireRole } from "../auth";
 import { orderInclude, serializeOrder } from "../serializers";
 import { emitNewOrder, emitOrderUpdate } from "../realtime";
-import { getRestaurantSettings } from "./settings";
 import { ORDER_STATUS_PUSH_MESSAGES, sendPushNotification } from "../push";
 
 export const ordersRouter = Router();
@@ -13,6 +12,7 @@ const FLAT_DELIVERY_FEE_CENTS = 299;
 
 const createOrderSchema = z.object({
   addressId: z.string().min(1),
+  restaurantId: z.string().min(1),
   items: z
     .array(
       z.object({
@@ -33,13 +33,16 @@ ordersRouter.post(
     if (!parsed.success) {
       return res.status(400).json({ error: parsed.error.flatten() });
     }
-    const { addressId, items } = parsed.data;
+    const { addressId, restaurantId, items } = parsed.data;
 
-    const settings = await getRestaurantSettings();
-    if (!settings.isOpen) {
+    const restaurant = await prisma.restaurant.findUnique({ where: { id: restaurantId } });
+    if (!restaurant) {
+      return res.status(400).json({ error: "Restaurant not found" });
+    }
+    if (!restaurant.isOpen) {
       return res
         .status(400)
-        .json({ error: "The restaurant is currently closed and not accepting orders." });
+        .json({ error: `${restaurant.name} is currently closed and not accepting orders.` });
     }
 
     const address = await prisma.address.findUnique({
@@ -51,9 +54,16 @@ ordersRouter.post(
 
     const menuItems = await prisma.menuItem.findMany({
       where: { id: { in: items.map((i) => i.menuItemId) } },
+      include: { category: true },
     });
     if (menuItems.length !== items.length) {
       return res.status(400).json({ error: "One or more menu items not found" });
+    }
+    const wrongRestaurant = menuItems.find((m) => m.category.restaurantId !== restaurantId);
+    if (wrongRestaurant) {
+      return res.status(400).json({
+        error: "Your cart contains items from a different restaurant. Please start a new order.",
+      });
     }
     const unavailable = menuItems.find((m) => !m.isAvailable);
     if (unavailable) {
@@ -71,6 +81,7 @@ ordersRouter.post(
     const order = await prisma.order.create({
       data: {
         customerId: req.auth!.sub,
+        restaurantId,
         deliveryAddressId: addressId,
         subtotalCents,
         deliveryFeeCents: FLAT_DELIVERY_FEE_CENTS,
@@ -106,6 +117,13 @@ ordersRouter.get("/:id", requireAuth, async (req, res) => {
   });
   if (!order) return res.status(404).json({ error: "Order not found" });
 
+  if (
+    (req.auth!.role === "RESTAURANT_ADMIN" || req.auth!.role === "RESTAURANT_STAFF") &&
+    order.restaurantId !== req.auth!.restaurantId
+  ) {
+    return res.status(403).json({ error: "This order belongs to a different restaurant" });
+  }
+
   const serialized = serializeOrder(order);
   if (req.auth!.role === "RESTAURANT_ADMIN" || req.auth!.role === "RESTAURANT_STAFF") {
     const customerOrderCount = await prisma.order.count({
@@ -125,6 +143,11 @@ ordersRouter.get("/", requireAuth, async (req, res) => {
       : req.auth!.role === "DELIVERY_RIDER"
       ? {
           assignment: { riderId: req.auth!.sub },
+          ...(status ? { status: status as any } : {}),
+        }
+      : req.auth!.role === "RESTAURANT_ADMIN" || req.auth!.role === "RESTAURANT_STAFF"
+      ? {
+          restaurantId: req.auth!.restaurantId ?? "__none__",
           ...(status ? { status: status as any } : {}),
         }
       : status
@@ -180,6 +203,9 @@ ordersRouter.post("/:id/status", requireAuth, async (req, res) => {
 
   const role = req.auth!.role;
   if (role === "RESTAURANT_ADMIN" || role === "RESTAURANT_STAFF") {
+    if (order.restaurantId !== req.auth!.restaurantId) {
+      return res.status(403).json({ error: "This order belongs to a different restaurant" });
+    }
     const allowed = RESTAURANT_TRANSITIONS[order.status] ?? [];
     if (!allowed.includes(nextStatus)) {
       return res

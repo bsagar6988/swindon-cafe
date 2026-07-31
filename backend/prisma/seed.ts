@@ -19,13 +19,36 @@ async function main() {
   });
 
   await prisma.user.upsert({
-    where: { email: "admin@example.com" },
+    where: { email: "superadmin@example.com" },
     update: {},
+    create: {
+      name: "Sam SuperAdmin",
+      email: "superadmin@example.com",
+      passwordHash,
+      role: "APP_ADMIN",
+    },
+  });
+
+  const swindonEats = await prisma.restaurant.upsert({
+    where: { id: "seed-restaurant-swindon-eats" },
+    update: {},
+    create: {
+      id: "seed-restaurant-swindon-eats",
+      name: "Swindon Eats",
+      address: "14 Havelock Square, Swindon, Wiltshire, SN1 1HG, United Kingdom",
+      isOpen: true,
+    },
+  });
+
+  await prisma.user.upsert({
+    where: { email: "admin@example.com" },
+    update: { restaurantId: swindonEats.id },
     create: {
       name: "Riley Restaurant",
       email: "admin@example.com",
       passwordHash,
       role: "RESTAURANT_ADMIN",
+      restaurantId: swindonEats.id,
     },
   });
 
@@ -39,6 +62,58 @@ async function main() {
       role: "DELIVERY_RIDER",
     },
   });
+
+  // A second demo restaurant so the customer app's marketplace browse
+  // screen has more than one option to show. Kept deliberately simple (no
+  // custom illustrations) — items use imageUrl: null, which the app already
+  // renders as a first-letter placeholder.
+  const goldenWok = await prisma.restaurant.upsert({
+    where: { id: "seed-restaurant-golden-wok" },
+    update: {},
+    create: {
+      id: "seed-restaurant-golden-wok",
+      name: "Golden Wok",
+      address: "8 Regent Street, Swindon, Wiltshire, SN1 1JQ, United Kingdom",
+      isOpen: true,
+    },
+  });
+
+  await prisma.user.upsert({
+    where: { email: "wok-admin@example.com" },
+    update: { restaurantId: goldenWok.id },
+    create: {
+      name: "Wei Wok",
+      email: "wok-admin@example.com",
+      passwordHash,
+      role: "RESTAURANT_ADMIN",
+      restaurantId: goldenWok.id,
+    },
+  });
+
+  const wokMains = await prisma.menuCategory.upsert({
+    where: { id: "seed-cat-wok-mains" },
+    update: {},
+    create: {
+      id: "seed-cat-wok-mains",
+      name: "Mains",
+      sortOrder: 0,
+      restaurantId: goldenWok.id,
+    },
+  });
+
+  const wokItems = [
+    { id: "wok-item-1", name: "Sweet and Sour Chicken", priceCents: 995, categoryId: wokMains.id, description: "Battered chicken, peppers, pineapple, sweet and sour sauce" },
+    { id: "wok-item-2", name: "Beef Chow Mein", priceCents: 1050, categoryId: wokMains.id, description: "Stir-fried noodles, beef, bean sprouts, spring onion" },
+    { id: "wok-item-3", name: "Vegetable Spring Rolls", priceCents: 495, categoryId: wokMains.id, description: "Crispy rolls, mixed vegetables, sweet chilli dip" },
+  ].map((item) => ({ ...item, imageUrl: null }));
+
+  for (const item of wokItems) {
+    await prisma.menuItem.upsert({
+      where: { id: item.id },
+      update: {},
+      create: item,
+    });
+  }
 
   await prisma.address.upsert({
     where: { id: "seed-address-1" },
@@ -59,37 +134,42 @@ async function main() {
   const starters = await prisma.menuCategory.upsert({
     where: { id: "seed-cat-starters" },
     update: {},
-    create: { id: "seed-cat-starters", name: "Starters", sortOrder: 0 },
+    create: { id: "seed-cat-starters", name: "Starters", sortOrder: 0, restaurantId: swindonEats.id },
   });
   const mains = await prisma.menuCategory.upsert({
     where: { id: "seed-cat-mains" },
     update: {},
-    create: { id: "seed-cat-mains", name: "Mains", sortOrder: 1 },
+    create: { id: "seed-cat-mains", name: "Mains", sortOrder: 1, restaurantId: swindonEats.id },
   });
   const drinks = await prisma.menuCategory.upsert({
     where: { id: "seed-cat-drinks" },
     update: {},
-    create: { id: "seed-cat-drinks", name: "Drinks", sortOrder: 2 },
+    create: { id: "seed-cat-drinks", name: "Drinks", sortOrder: 2, restaurantId: swindonEats.id },
   });
   const sundaes = await prisma.menuCategory.upsert({
     where: { id: "seed-cat-sundaes" },
     update: {},
-    create: { id: "seed-cat-sundaes", name: "Sundaes", sortOrder: 3 },
+    create: { id: "seed-cat-sundaes", name: "Sundaes", sortOrder: 3, restaurantId: swindonEats.id },
   });
   const waffles = await prisma.menuCategory.upsert({
     where: { id: "seed-cat-waffles" },
     update: {},
-    create: { id: "seed-cat-waffles", name: "Waffles", sortOrder: 4 },
+    create: { id: "seed-cat-waffles", name: "Waffles", sortOrder: 4, restaurantId: swindonEats.id },
   });
   const crepes = await prisma.menuCategory.upsert({
     where: { id: "seed-cat-crepes" },
     update: {},
-    create: { id: "seed-cat-crepes", name: "Crepes", sortOrder: 5 },
+    create: { id: "seed-cat-crepes", name: "Crepes", sortOrder: 5, restaurantId: swindonEats.id },
   });
   const cakesAndPuddings = await prisma.menuCategory.upsert({
     where: { id: "seed-cat-cakes-puddings" },
     update: {},
-    create: { id: "seed-cat-cakes-puddings", name: "Cakes & Puddings", sortOrder: 6 },
+    create: {
+      id: "seed-cat-cakes-puddings",
+      name: "Cakes & Puddings",
+      sortOrder: 6,
+      restaurantId: swindonEats.id,
+    },
   });
 
   const items = [
@@ -132,7 +212,11 @@ async function main() {
   }
 
   console.log("Seed complete. Test accounts (password: password123):");
-  console.log("  customer@example.com / RESTAURANT_ADMIN admin@example.com / DELIVERY_RIDER rider@example.com");
+  console.log("  CUSTOMER customer@example.com");
+  console.log("  APP_ADMIN superadmin@example.com");
+  console.log("  RESTAURANT_ADMIN (Swindon Eats) admin@example.com");
+  console.log("  RESTAURANT_ADMIN (Golden Wok) wok-admin@example.com");
+  console.log("  DELIVERY_RIDER rider@example.com");
 }
 
 main()

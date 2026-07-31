@@ -1,4 +1,5 @@
 export type UserRole =
+  | "APP_ADMIN"
   | "CUSTOMER"
   | "RESTAURANT_ADMIN"
   | "RESTAURANT_STAFF"
@@ -18,6 +19,19 @@ export interface AuthUser {
   name: string;
   email: string;
   role: UserRole;
+  restaurantId?: string;
+}
+
+export interface Restaurant {
+  id: string;
+  name: string;
+  address?: string | null;
+  isOpen: boolean;
+  createdAt: string;
+}
+
+export interface RestaurantAdminSummary extends Restaurant {
+  adminEmail: string | null;
 }
 
 export interface Address {
@@ -36,6 +50,7 @@ export interface MenuCategory {
   id: string;
   name: string;
   sortOrder: number;
+  restaurantId: string;
 }
 
 export interface MenuItem {
@@ -77,6 +92,8 @@ export interface Order {
   id: string;
   customerId: string;
   customerName: string;
+  restaurantId: string;
+  restaurantName: string;
   status: OrderStatus;
   items: OrderItem[];
   subtotalCents: number;
@@ -89,10 +106,6 @@ export interface Order {
   review?: Review | null;
   customerOrderCount?: number;
   statusEvents: OrderStatusEvent[];
-}
-
-export interface RestaurantSettings {
-  isOpen: boolean;
 }
 
 export interface AnalyticsDayBucket {

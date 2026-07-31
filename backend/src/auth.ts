@@ -2,6 +2,7 @@ import type { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
 
 export type UserRole =
+  | "APP_ADMIN"
   | "CUSTOMER"
   | "RESTAURANT_ADMIN"
   | "RESTAURANT_STAFF"
@@ -12,6 +13,7 @@ const JWT_SECRET = process.env.JWT_SECRET ?? "dev-only-secret-change-me";
 export interface AuthTokenPayload {
   sub: string;
   role: UserRole;
+  restaurantId?: string;
 }
 
 export function signToken(payload: AuthTokenPayload): string {

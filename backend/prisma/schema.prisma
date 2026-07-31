@@ -11,8 +11,20 @@ datasource db {
 // application layer) rather than native Postgres enums, so this schema stays
 // compatible with the SQLite-based local dev setup this project started on.
 // enums at the application layer (zod schemas + shared TS union types).
-// UserRole: CUSTOMER | RESTAURANT_ADMIN | RESTAURANT_STAFF | DELIVERY_RIDER
+// UserRole: APP_ADMIN | CUSTOMER | RESTAURANT_ADMIN | RESTAURANT_STAFF | DELIVERY_RIDER
 // OrderStatus: PLACED | ACCEPTED | PREPARING | READY_FOR_PICKUP | OUT_FOR_DELIVERY | DELIVERED | CANCELLED
+
+model Restaurant {
+  id        String   @id @default(cuid())
+  name      String
+  address   String?
+  isOpen    Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  admins     User[]         @relation("RestaurantStaff")
+  categories MenuCategory[]
+  orders     Order[]
+}
 
 model User {
   id           String   @id @default(cuid())
@@ -22,6 +34,12 @@ model User {
   role         String
   createdAt    DateTime @default(now())
   pushToken    String?
+
+  // Only set for RESTAURANT_ADMIN / RESTAURANT_STAFF users, scoping them to
+  // the one restaurant they manage. Null for CUSTOMER, DELIVERY_RIDER, and
+  // APP_ADMIN (platform-level, not tied to any single restaurant).
+  restaurant   Restaurant? @relation("RestaurantStaff", fields: [restaurantId], references: [id])
+  restaurantId String?
 
   addresses           Address[]
   ordersAsCustomer    Order[]             @relation("CustomerOrders")
@@ -51,6 +69,9 @@ model MenuCategory {
   name      String
   sortOrder Int    @default(0)
 
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id])
+  restaurantId String
+
   items MenuItem[]
 }
 
@@ -79,6 +100,9 @@ model Order {
 
   customer   User   @relation("CustomerOrders", fields: [customerId], references: [id])
   customerId String
+
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id])
+  restaurantId String
 
   deliveryAddress   Address @relation(fields: [deliveryAddressId], references: [id])
   deliveryAddressId String
@@ -146,10 +170,4 @@ model Review {
   orderId    String @unique
   customer   User   @relation(fields: [customerId], references: [id])
   customerId String
-}
-
-// Singleton row (fixed id "singleton") holding store-wide settings.
-model RestaurantSettings {
-  id     String  @id @default(cuid())
-  isOpen Boolean @default(true)
 }

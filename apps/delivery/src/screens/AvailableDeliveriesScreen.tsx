@@ -66,6 +66,7 @@ export function AvailableDeliveriesScreen() {
                 <Text style={styles.orderNumber}>Order #{item.id.slice(-6).toUpperCase()}</Text>
                 <Text style={styles.total}>{formatGBP(item.totalCents)}</Text>
               </View>
+              <Text style={styles.restaurantName}>{item.restaurantName}</Text>
               <Text style={styles.customer}>{item.customerName}</Text>
               <Text style={styles.addressSummary}>
                 {item.deliveryAddress.line1}, {item.deliveryAddress.city}
@@ -109,6 +110,7 @@ const styles = StyleSheet.create({
   },
   cardHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   orderNumber: { fontWeight: "700", color: theme.colors.text, fontSize: 15 },
+  restaurantName: { fontSize: 12, color: theme.colors.primary, fontWeight: "700", marginTop: 4 },
   total: { fontWeight: "800", color: theme.colors.primary, fontSize: 15 },
   customer: { color: theme.colors.text, marginTop: theme.spacing(2), fontWeight: "600" },
   addressSummary: { color: theme.colors.textMuted, marginTop: 2, fontSize: 13 },

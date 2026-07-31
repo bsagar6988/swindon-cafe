@@ -6,16 +6,18 @@ import { Button } from "../components/Button";
 
 export function ProfileScreen() {
   const { user, logout, api } = useAuth();
+  const isAppAdmin = user?.role === "APP_ADMIN";
   const [isOpen, setIsOpen] = useState<boolean | null>(null);
   const [savingOpen, setSavingOpen] = useState(false);
   const [settingsError, setSettingsError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (isAppAdmin) return;
     api
-      .getSettings()
-      .then((s) => setIsOpen(s.isOpen))
+      .getMyRestaurant()
+      .then((r) => setIsOpen(r.isOpen))
       .catch((e) => setSettingsError(e instanceof Error ? e.message : "Failed to load settings"));
-  }, [api]);
+  }, [api, isAppAdmin]);
 
   const onToggleOpen = async () => {
     if (isOpen === null) return;
@@ -24,7 +26,7 @@ export function ProfileScreen() {
     setSavingOpen(true);
     setIsOpen(!previous);
     try {
-      const updated = await api.updateSettings(!previous);
+      const updated = await api.updateMyRestaurantSettings(!previous);
       setIsOpen(updated.isOpen);
     } catch (e) {
       setIsOpen(previous);
@@ -45,24 +47,26 @@ export function ProfileScreen() {
         <Text style={styles.email}>{user?.email}</Text>
         <Text style={styles.role}>{user?.role}</Text>
 
-        <View style={styles.settingsCard}>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.settingsLabel}>Store is open for orders</Text>
-            <Text style={styles.settingsHint}>
-              {isOpen === null
-                ? "Loading..."
-                : isOpen
-                ? "Customers can place new orders"
-                : "Customers cannot place new orders"}
-            </Text>
+        {!isAppAdmin && (
+          <View style={styles.settingsCard}>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.settingsLabel}>Store is open for orders</Text>
+              <Text style={styles.settingsHint}>
+                {isOpen === null
+                  ? "Loading..."
+                  : isOpen
+                  ? "Customers can place new orders"
+                  : "Customers cannot place new orders"}
+              </Text>
+            </View>
+            <Switch
+              value={!!isOpen}
+              onValueChange={onToggleOpen}
+              disabled={isOpen === null || savingOpen}
+              trackColor={{ true: theme.colors.secondary, false: theme.colors.border }}
+            />
           </View>
-          <Switch
-            value={!!isOpen}
-            onValueChange={onToggleOpen}
-            disabled={isOpen === null || savingOpen}
-            trackColor={{ true: theme.colors.secondary, false: theme.colors.border }}
-          />
-        </View>
+        )}
         {settingsError && <Text style={styles.error}>{settingsError}</Text>}
 
         <Button title="Log out" variant="outline" onPress={logout} style={styles.button} />

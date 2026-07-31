@@ -9,6 +9,10 @@ analyticsRouter.get(
   requireAuth,
   requireRole("RESTAURANT_ADMIN", "RESTAURANT_STAFF"),
   async (req, res) => {
+    const restaurantId = req.auth!.restaurantId;
+    if (!restaurantId) {
+      return res.status(404).json({ error: "No restaurant assigned to this account" });
+    }
     const days = Math.min(Math.max(Number(req.query.days) || 14, 1), 90);
     const since = new Date();
     since.setDate(since.getDate() - (days - 1));
@@ -16,15 +20,16 @@ analyticsRouter.get(
 
     const [deliveredOrders, ordersInRange, bestSellersRaw] = await Promise.all([
       prisma.order.findMany({
-        where: { status: "DELIVERED" },
+        where: { status: "DELIVERED", restaurantId },
         select: { totalCents: true },
       }),
       prisma.order.findMany({
-        where: { createdAt: { gte: since } },
+        where: { createdAt: { gte: since }, restaurantId },
         select: { createdAt: true, totalCents: true, status: true },
       }),
       prisma.orderItem.groupBy({
         by: ["name"],
+        where: { order: { restaurantId } },
         _sum: { quantity: true },
         orderBy: { _sum: { quantity: "desc" } },
         take: 5,

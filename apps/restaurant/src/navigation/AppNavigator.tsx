@@ -14,10 +14,17 @@ import { OrderDetailScreen } from "../screens/OrderDetailScreen";
 import { MenuManagementScreen } from "../screens/MenuManagementScreen";
 import { RidersScreen } from "../screens/RidersScreen";
 import { ProfileScreen } from "../screens/ProfileScreen";
-import type { AuthStackParamList, MainTabParamList, RootStackParamList } from "./types";
+import { ManageRestaurantsScreen } from "../screens/ManageRestaurantsScreen";
+import type {
+  AppAdminTabParamList,
+  AuthStackParamList,
+  MainTabParamList,
+  RootStackParamList,
+} from "./types";
 
 const AuthStack = createNativeStackNavigator<AuthStackParamList>();
 const Tab = createBottomTabNavigator<MainTabParamList>();
+const AppAdminTab = createBottomTabNavigator<AppAdminTabParamList>();
 const RootStack = createNativeStackNavigator<RootStackParamList>();
 
 function AuthNavigator() {
@@ -92,6 +99,35 @@ function MainNavigator() {
   );
 }
 
+function AppAdminNavigator() {
+  return (
+    <AppAdminTab.Navigator
+      screenOptions={{
+        headerShown: false,
+        tabBarActiveTintColor: theme.colors.primary,
+        tabBarInactiveTintColor: theme.colors.textMuted,
+      }}
+    >
+      <AppAdminTab.Screen
+        name="RestaurantsTab"
+        component={ManageRestaurantsScreen}
+        options={{
+          title: "Restaurants",
+          tabBarIcon: ({ color, size }) => <Ionicons name="storefront-outline" size={size} color={color} />,
+        }}
+      />
+      <AppAdminTab.Screen
+        name="ProfileTab"
+        component={ProfileScreen}
+        options={{
+          title: "Profile",
+          tabBarIcon: ({ color, size }) => <Ionicons name="person-outline" size={size} color={color} />,
+        }}
+      />
+    </AppAdminTab.Navigator>
+  );
+}
+
 export function AppNavigator() {
   const { user, loading } = useAuth();
 
@@ -104,6 +140,16 @@ export function AppNavigator() {
   }
 
   return (
-    <NavigationContainer>{user ? <MainNavigator /> : <AuthNavigator />}</NavigationContainer>
+    <NavigationContainer>
+      {user ? (
+        user.role === "APP_ADMIN" ? (
+          <AppAdminNavigator />
+        ) : (
+          <MainNavigator />
+        )
+      ) : (
+        <AuthNavigator />
+      )}
+    </NavigationContainer>
   );
 }

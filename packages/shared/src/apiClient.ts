@@ -5,9 +5,10 @@ import type {
   MenuItem,
   Order,
   OrderStatus,
+  Restaurant,
+  RestaurantAdminSummary,
   Review,
   Rider,
-  RestaurantSettings,
   UserRole,
 } from "./types";
 
@@ -71,16 +72,39 @@ export function createApiClient(config: ApiClientConfig) {
         method: "POST",
         body: { email, password },
       }),
-    signup: (name: string, email: string, password: string, role: UserRole) =>
+    signup: (name: string, email: string, password: string) =>
       request<{ token: string; user: AuthUser }>("/auth/signup", {
         method: "POST",
-        body: { name, email, password, role },
+        body: { name, email, password, role: "CUSTOMER" satisfies UserRole },
       }),
     me: () => request<AuthUser>("/auth/me"),
 
+    // restaurants (public marketplace + app admin)
+    listRestaurants: () => request<Restaurant[]>("/restaurants"),
+    getRestaurant: (id: string) => request<Restaurant>(`/restaurants/${id}`),
+    listRestaurantsAdmin: () => request<RestaurantAdminSummary[]>("/restaurants/admin"),
+    createRestaurant: (payload: {
+      name: string;
+      address?: string | null;
+      adminName: string;
+      adminEmail: string;
+      adminPassword: string;
+    }) =>
+      request<{ restaurant: Restaurant; admin: { id: string; name: string; email: string } }>(
+        "/restaurants",
+        { method: "POST", body: payload }
+      ),
+    getMyRestaurant: () => request<Restaurant>("/restaurants/mine"),
+    updateMyRestaurantSettings: (isOpen: boolean) =>
+      request<Restaurant>("/restaurants/mine", { method: "PATCH", body: { isOpen } }),
+
     // menu
-    getMenu: () =>
-      request<{ categories: MenuCategory[]; items: MenuItem[] }>("/menu"),
+    getMenu: (restaurantId: string) =>
+      request<{ categories: MenuCategory[]; items: MenuItem[] }>(
+        `/menu?restaurantId=${restaurantId}`
+      ),
+    getMyMenu: () =>
+      request<{ categories: MenuCategory[]; items: MenuItem[] }>("/menu/mine"),
     createMenuItem: (item: Omit<MenuItem, "id">) =>
       request<MenuItem>("/menu/items", { method: "POST", body: item }),
     updateMenuItem: (id: string, item: Partial<MenuItem>) =>
@@ -99,6 +123,7 @@ export function createApiClient(config: ApiClientConfig) {
     createOrder: (payload: {
       items: { menuItemId: string; quantity: number; notes?: string | null }[];
       addressId: string;
+      restaurantId: string;
     }) => request<Order>("/orders", { method: "POST", body: payload }),
     getOrder: (id: string) => request<Order>(`/orders/${id}`),
     listOrders: (params?: { status?: OrderStatus }) =>
@@ -148,11 +173,6 @@ export function createApiClient(config: ApiClientConfig) {
     createRider: (name: string, email: string, password: string) =>
       request<Rider>("/riders", { method: "POST", body: { name, email, password } }),
     deleteRider: (id: string) => request<void>(`/riders/${id}`, { method: "DELETE" }),
-
-    // restaurant settings
-    getSettings: () => request<RestaurantSettings>("/settings"),
-    updateSettings: (isOpen: boolean) =>
-      request<RestaurantSettings>("/settings", { method: "PATCH", body: { isOpen } }),
 
     // analytics (restaurant admin)
     getAnalytics: (days?: number) =>

@@ -46,7 +46,7 @@ export function MenuManagementScreen() {
     setLoading(true);
     setError(null);
     try {
-      const menu = await api.getMenu();
+      const menu = await api.getMyMenu();
       setCategories(menu.categories.slice().sort((a, b) => a.sortOrder - b.sortOrder));
       setItems(menu.items);
       if (!categoryId && menu.categories.length > 0) {

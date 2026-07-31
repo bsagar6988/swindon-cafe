@@ -10,7 +10,8 @@ import type { RootStackParamList } from "../navigation/types";
 
 export function CartScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const { lines, addItem, decrementItem, removeItem, setNotes, subtotalCents } = useCart();
+  const { lines, restaurantId, addItem, decrementItem, removeItem, setNotes, subtotalCents } =
+    useCart();
 
   if (lines.length === 0) {
     return (
@@ -49,7 +50,10 @@ export function CartScreen() {
                   <Text style={styles.qtyButtonText}>−</Text>
                 </Pressable>
                 <Text style={styles.qty}>{line.quantity}</Text>
-                <Pressable style={styles.qtyButton} onPress={() => addItem(line.item)}>
+                <Pressable
+                  style={styles.qtyButton}
+                  onPress={() => addItem(line.item, restaurantId!)}
+                >
                   <Text style={styles.qtyButtonText}>+</Text>
                 </Pressable>
               </View>

@@ -14,7 +14,6 @@ import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { AppHeader, formatGBP, formatUKDateTime, theme, type Order } from "@restaurant/shared";
 import { useAuth } from "../context/AuthContext";
 import { useCart } from "../context/CartContext";
-import { useMenu } from "../context/MenuContext";
 import { Button } from "../components/Button";
 import type { RootStackParamList } from "../navigation/types";
 
@@ -31,10 +30,10 @@ const STATUS_LABEL: Record<string, string> = {
 export function OrderHistoryScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { api } = useAuth();
-  const { items: menuItems } = useMenu();
-  const { addItem } = useCart();
+  const { restaurantId: cartRestaurantId, addItem, clear } = useCart();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
+  const [reordering, setReordering] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -52,35 +51,57 @@ export function OrderHistoryScreen() {
     }, [load])
   );
 
-  const orderAgain = (order: Order) => {
-    let addedCount = 0;
-    const skippedNames: string[] = [];
-
-    for (const orderItem of order.items) {
-      const menuItem = menuItems.find((m) => m.id === orderItem.menuItemId);
-      if (!menuItem || !menuItem.isAvailable) {
-        skippedNames.push(orderItem.name);
-        continue;
-      }
-      for (let i = 0; i < orderItem.quantity; i++) {
-        addItem(menuItem);
-      }
-      addedCount += 1;
+  const orderAgain = async (order: Order) => {
+    if (cartRestaurantId && cartRestaurantId !== order.restaurantId) {
+      const message = `Your cart has items from another restaurant. Start a new order from ${order.restaurantName} and clear it?`;
+      const confirmed =
+        Platform.OS === "web" ? window.confirm(message) : await confirmNative(message);
+      if (!confirmed) return;
+      clear();
     }
 
-    if (skippedNames.length > 0) {
-      const message = `Added ${addedCount} of ${order.items.length} items — ${skippedNames.join(
-        ", "
-      )} ${skippedNames.length === 1 ? "is" : "are"} no longer available`;
-      if (Platform.OS === "web") {
-        window.alert(message);
-      } else {
-        Alert.alert("Some items were skipped", message);
-      }
-    }
+    setReordering(order.id);
+    try {
+      const menu = await api.getMenu(order.restaurantId);
+      let addedCount = 0;
+      const skippedNames: string[] = [];
 
-    navigation.navigate("MainTabs", { screen: "CartTab" });
+      for (const orderItem of order.items) {
+        const menuItem = menu.items.find((m) => m.id === orderItem.menuItemId);
+        if (!menuItem || !menuItem.isAvailable) {
+          skippedNames.push(orderItem.name);
+          continue;
+        }
+        for (let i = 0; i < orderItem.quantity; i++) {
+          addItem(menuItem, order.restaurantId);
+        }
+        addedCount += 1;
+      }
+
+      if (skippedNames.length > 0) {
+        const message = `Added ${addedCount} of ${order.items.length} items — ${skippedNames.join(
+          ", "
+        )} ${skippedNames.length === 1 ? "is" : "are"} no longer available`;
+        if (Platform.OS === "web") {
+          window.alert(message);
+        } else {
+          Alert.alert("Some items were skipped", message);
+        }
+      }
+
+      navigation.navigate("MainTabs", { screen: "CartTab" });
+    } finally {
+      setReordering(null);
+    }
   };
+
+  const confirmNative = (message: string) =>
+    new Promise<boolean>((resolve) => {
+      Alert.alert("Start a new order?", message, [
+        { text: "Cancel", style: "cancel", onPress: () => resolve(false) },
+        { text: "Clear cart", style: "destructive", onPress: () => resolve(true) },
+      ]);
+    });
 
   if (loading) {
     return (
@@ -119,6 +140,7 @@ export function OrderHistoryScreen() {
           >
             <View style={{ flex: 1 }}>
               <Text style={styles.orderNumber}>Order #{item.id.slice(-6).toUpperCase()}</Text>
+              <Text style={styles.restaurantName}>{item.restaurantName}</Text>
               <Text style={styles.placedTime}>{formatUKDateTime(item.createdAt)} UK</Text>
               <Text style={styles.itemsSummary}>
                 {item.items.map((i) => `${i.quantity}× ${i.name}`).join(", ")}
@@ -132,6 +154,7 @@ export function OrderHistoryScreen() {
           <Button
             title="Order again"
             variant="outline"
+            loading={reordering === item.id}
             onPress={() => orderAgain(item)}
             style={styles.orderAgainButton}
           />
@@ -158,6 +181,7 @@ const styles = StyleSheet.create({
   },
   orderAgainButton: { marginTop: theme.spacing(3) },
   orderNumber: { fontWeight: "700", color: theme.colors.text },
+  restaurantName: { fontSize: 12, color: theme.colors.primary, fontWeight: "700", marginTop: 2 },
   placedTime: { fontSize: 11, color: theme.colors.textMuted, marginTop: 2 },
   itemsSummary: { fontSize: 12, color: theme.colors.textMuted, marginTop: 4, maxWidth: 220 },
   status: { fontWeight: "700", color: theme.colors.secondary, fontSize: 13 },

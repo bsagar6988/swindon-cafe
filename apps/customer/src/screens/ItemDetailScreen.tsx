@@ -1,8 +1,7 @@
 import React from "react";
-import { Image, StyleSheet, Text, View } from "react-native";
+import { Alert, Image, Platform, StyleSheet, Text, View } from "react-native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { AppHeader, formatGBP, theme } from "@restaurant/shared";
-import { useMenu } from "../context/MenuContext";
 import { useCart } from "../context/CartContext";
 import { Button } from "../components/Button";
 import type { RootStackParamList } from "../navigation/types";
@@ -10,20 +9,30 @@ import type { RootStackParamList } from "../navigation/types";
 type Props = NativeStackScreenProps<RootStackParamList, "ItemDetail">;
 
 export function ItemDetailScreen({ route, navigation }: Props) {
-  const { items } = useMenu();
-  const { addItem } = useCart();
-  const item = items.find((i) => i.id === route.params.itemId);
+  const { item, restaurantId } = route.params;
+  const { addItem, restaurantId: cartRestaurantId } = useCart();
 
-  if (!item) {
-    return (
-      <View style={styles.container}>
-        <AppHeader subtitle="Item" />
-        <View style={styles.center}>
-          <Text>Item not found.</Text>
-        </View>
-      </View>
-    );
-  }
+  const confirmAndAdd = () => {
+    if (cartRestaurantId && cartRestaurantId !== restaurantId) {
+      const message =
+        "Your cart has items from another restaurant. Starting a new order here will clear it.";
+      if (Platform.OS === "web") {
+        if (!window.confirm(message)) return;
+      } else {
+        Alert.alert("Start a new order?", message, [
+          { text: "Cancel", style: "cancel" },
+          { text: "Clear cart", style: "destructive", onPress: () => doAdd() },
+        ]);
+        return;
+      }
+    }
+    doAdd();
+  };
+
+  const doAdd = () => {
+    addItem(item, restaurantId);
+    navigation.goBack();
+  };
 
   return (
     <View style={styles.container}>
@@ -42,10 +51,7 @@ export function ItemDetailScreen({ route, navigation }: Props) {
       <Button
         title={item.isAvailable ? "Add to cart" : "Currently unavailable"}
         disabled={!item.isAvailable}
-        onPress={() => {
-          addItem(item);
-          navigation.goBack();
-        }}
+        onPress={confirmAndAdd}
         style={styles.button}
       />
     </View>

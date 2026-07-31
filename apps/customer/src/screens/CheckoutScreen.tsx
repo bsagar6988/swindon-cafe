@@ -21,7 +21,7 @@ const DELIVERY_FEE_CENTS = 299;
 export function CheckoutScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { api } = useAuth();
-  const { lines, subtotalCents, clear } = useCart();
+  const { lines, restaurantId, subtotalCents, clear } = useCart();
 
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
@@ -80,6 +80,7 @@ export function CheckoutScreen() {
     try {
       const order = await api.createOrder({
         addressId: selectedAddressId,
+        restaurantId: restaurantId!,
         items: lines.map((l) => ({
           menuItemId: l.item.id,
           quantity: l.quantity,

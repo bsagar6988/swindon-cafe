@@ -118,12 +118,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signup = useCallback(async (name: string, email: string, password: string) => {
     const tempApi = createApiClient({ baseUrl: API_BASE_URL, getToken: () => null });
-    const { token: newToken, user: newUser } = await tempApi.signup(
-      name,
-      email,
-      password,
-      "CUSTOMER"
-    );
+    const { token: newToken, user: newUser } = await tempApi.signup(name, email, password);
     await AsyncStorage.setItem(TOKEN_KEY, newToken);
     setToken(newToken);
     setUser(newUser);

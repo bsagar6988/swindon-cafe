@@ -1,4 +1,6 @@
 import type { NavigatorScreenParams } from "@react-navigation/native";
+import type { MenuItem } from "@restaurant/shared";
+import type { LegalPageKey } from "../legalContent";
 
 export type AuthStackParamList = {
   Login: undefined;
@@ -14,8 +16,12 @@ export type MainTabParamList = {
 
 export type RootStackParamList = {
   MainTabs: NavigatorScreenParams<MainTabParamList> | undefined;
-  ItemDetail: { itemId: string };
+  RestaurantMenu: { restaurantId: string };
+  ItemDetail: { item: MenuItem; restaurantId: string };
   Checkout: undefined;
   OrderTracking: { orderId: string };
   AddressBook: undefined;
+  About: undefined;
+  LegalHelp: undefined;
+  StaticContent: { pageKey: LegalPageKey };
 };

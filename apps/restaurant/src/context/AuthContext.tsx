@@ -18,7 +18,6 @@ interface AuthContextValue {
   loading: boolean;
   api: ApiClient;
   login: (email: string, password: string) => Promise<void>;
-  signup: (name: string, email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -67,19 +66,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(newUser);
   }, []);
 
-  const signup = useCallback(async (name: string, email: string, password: string) => {
-    const tempApi = createApiClient({ baseUrl: API_BASE_URL, getToken: () => null });
-    const { token: newToken, user: newUser } = await tempApi.signup(
-      name,
-      email,
-      password,
-      "RESTAURANT_ADMIN"
-    );
-    await AsyncStorage.setItem(TOKEN_KEY, newToken);
-    setToken(newToken);
-    setUser(newUser);
-  }, []);
-
   const logout = useCallback(async () => {
     await AsyncStorage.removeItem(TOKEN_KEY);
     setToken(null);
@@ -87,8 +73,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const value = useMemo(
-    () => ({ user, token, loading, api, login, signup, logout }),
-    [user, token, loading, api, login, signup, logout]
+    () => ({ user, token, loading, api, login, logout }),
+    [user, token, loading, api, login, logout]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

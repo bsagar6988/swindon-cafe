@@ -8,7 +8,7 @@ import { ordersRouter } from "./routes/orders";
 import { deliveriesRouter } from "./routes/deliveries";
 import { addressesRouter } from "./routes/addresses";
 import { ridersRouter } from "./routes/riders";
-import { settingsRouter } from "./routes/settings";
+import { restaurantsRouter } from "./routes/restaurants";
 import { analyticsRouter } from "./routes/analytics";
 import { initRealtime } from "./realtime";
 
@@ -24,7 +24,7 @@ app.use("/orders", ordersRouter);
 app.use("/deliveries", deliveriesRouter);
 app.use("/addresses", addressesRouter);
 app.use("/riders", ridersRouter);
-app.use("/settings", settingsRouter);
+app.use("/restaurants", restaurantsRouter);
 app.use("/analytics", analyticsRouter);
 
 app.use((err: unknown, _req: express.Request, res: express.Response, _next: express.NextFunction) => {

@@ -28,6 +28,18 @@ export function ProfileScreen() {
           style={styles.button}
         />
         <Button
+          title="About Swindon Eats"
+          variant="outline"
+          onPress={() => navigation.navigate("About")}
+          style={[styles.button, { marginTop: theme.spacing(3) }]}
+        />
+        <Button
+          title="Legal & Help"
+          variant="outline"
+          onPress={() => navigation.navigate("LegalHelp")}
+          style={[styles.button, { marginTop: theme.spacing(3) }]}
+        />
+        <Button
           title="Log out"
           variant="outline"
           onPress={logout}

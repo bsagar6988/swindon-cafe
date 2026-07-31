@@ -6,11 +6,11 @@ import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Ionicons } from "@expo/vector-icons";
 import { theme } from "@restaurant/shared";
 import { useAuth } from "../context/AuthContext";
-import { MenuProvider } from "../context/MenuContext";
 import { CartProvider, useCart } from "../context/CartContext";
 import { LoginScreen } from "../screens/LoginScreen";
 import { SignupScreen } from "../screens/SignupScreen";
-import { HomeScreen } from "../screens/HomeScreen";
+import { RestaurantListScreen } from "../screens/RestaurantListScreen";
+import { RestaurantMenuScreen } from "../screens/RestaurantMenuScreen";
 import { ItemDetailScreen } from "../screens/ItemDetailScreen";
 import { CartScreen } from "../screens/CartScreen";
 import { CheckoutScreen } from "../screens/CheckoutScreen";
@@ -18,6 +18,9 @@ import { OrderHistoryScreen } from "../screens/OrderHistoryScreen";
 import { OrderTrackingScreen } from "../screens/OrderTrackingScreen";
 import { ProfileScreen } from "../screens/ProfileScreen";
 import { AddressBookScreen } from "../screens/AddressBookScreen";
+import { AboutScreen } from "../screens/AboutScreen";
+import { LegalHelpScreen } from "../screens/LegalHelpScreen";
+import { StaticContentScreen } from "../screens/StaticContentScreen";
 import type { AuthStackParamList, MainTabParamList, RootStackParamList } from "./types";
 
 const AuthStack = createNativeStackNavigator<AuthStackParamList>();
@@ -71,9 +74,9 @@ function MainTabs() {
     >
       <Tab.Screen
         name="HomeTab"
-        component={HomeScreen}
+        component={RestaurantListScreen}
         options={{
-          title: "Menu",
+          title: "Restaurants",
           tabBarIcon: ({ color, size }) => <Ionicons name="restaurant-outline" size={size} color={color} />,
         }}
       />
@@ -107,25 +110,39 @@ function MainTabs() {
 
 function MainNavigator() {
   return (
-    <MenuProvider>
-      <CartProvider>
-        <RootStack.Navigator>
-          <RootStack.Screen name="MainTabs" component={MainTabs} options={{ headerShown: false }} />
-          <RootStack.Screen name="ItemDetail" component={ItemDetailScreen} options={{ title: "" }} />
-          <RootStack.Screen name="Checkout" component={CheckoutScreen} options={{ title: "Checkout" }} />
-          <RootStack.Screen
-            name="OrderTracking"
-            component={OrderTrackingScreen}
-            options={{ title: "Track order", headerBackVisible: false }}
-          />
-          <RootStack.Screen
-            name="AddressBook"
-            component={AddressBookScreen}
-            options={{ title: "Manage addresses" }}
-          />
-        </RootStack.Navigator>
-      </CartProvider>
-    </MenuProvider>
+    <CartProvider>
+      <RootStack.Navigator>
+        <RootStack.Screen name="MainTabs" component={MainTabs} options={{ headerShown: false }} />
+        <RootStack.Screen
+          name="RestaurantMenu"
+          component={RestaurantMenuScreen}
+          options={{ title: "" }}
+        />
+        <RootStack.Screen name="ItemDetail" component={ItemDetailScreen} options={{ title: "" }} />
+        <RootStack.Screen name="Checkout" component={CheckoutScreen} options={{ title: "Checkout" }} />
+        <RootStack.Screen
+          name="OrderTracking"
+          component={OrderTrackingScreen}
+          options={{ title: "Track order", headerBackVisible: false }}
+        />
+        <RootStack.Screen
+          name="AddressBook"
+          component={AddressBookScreen}
+          options={{ title: "Manage addresses" }}
+        />
+        <RootStack.Screen name="About" component={AboutScreen} options={{ title: "About us" }} />
+        <RootStack.Screen
+          name="LegalHelp"
+          component={LegalHelpScreen}
+          options={{ title: "Legal & Help" }}
+        />
+        <RootStack.Screen
+          name="StaticContent"
+          component={StaticContentScreen}
+          options={{ title: "" }}
+        />
+      </RootStack.Navigator>
+    </CartProvider>
   );
 }
 
