@@ -89,6 +89,26 @@ restaurantsRouter.get("/:id", async (req, res) => {
   res.json(serializeRestaurant(restaurant));
 });
 
+const updateRestaurantSchema = z.object({
+  name: z.string().min(1).optional(),
+  address: z.string().min(1).nullable().optional(),
+});
+
+restaurantsRouter.patch("/:id", requireAuth, requireRole("APP_ADMIN"), async (req, res) => {
+  const parsed = updateRestaurantSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({ error: parsed.error.flatten() });
+  }
+  const existing = await prisma.restaurant.findUnique({ where: { id: req.params.id } });
+  if (!existing) return res.status(404).json({ error: "Restaurant not found" });
+
+  const restaurant = await prisma.restaurant.update({
+    where: { id: req.params.id },
+    data: parsed.data,
+  });
+  res.json(serializeRestaurant(restaurant));
+});
+
 const createRestaurantSchema = z.object({
   name: z.string().min(1),
   address: z.string().min(1).nullable().optional(),

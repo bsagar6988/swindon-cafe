@@ -94,6 +94,8 @@ export function createApiClient(config: ApiClientConfig) {
         "/restaurants",
         { method: "POST", body: payload }
       ),
+    updateRestaurant: (id: string, patch: { name?: string; address?: string | null }) =>
+      request<Restaurant>(`/restaurants/${id}`, { method: "PATCH", body: patch }),
     getMyRestaurant: () => request<Restaurant>("/restaurants/mine"),
     updateMyRestaurantSettings: (isOpen: boolean) =>
       request<Restaurant>("/restaurants/mine", { method: "PATCH", body: { isOpen } }),

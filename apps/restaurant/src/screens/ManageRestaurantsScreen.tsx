@@ -27,6 +27,12 @@ export function ManageRestaurantsScreen() {
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
 
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editName, setEditName] = useState("");
+  const [editAddress, setEditAddress] = useState("");
+  const [savingEditId, setSavingEditId] = useState<string | null>(null);
+  const [editError, setEditError] = useState<string | null>(null);
+
   const load = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -75,6 +81,43 @@ export function ManageRestaurantsScreen() {
       setFormError(e instanceof Error ? e.message : "Failed to add restaurant");
     } finally {
       setSaving(false);
+    }
+  };
+
+  const startEdit = (restaurant: RestaurantAdminSummary) => {
+    setEditError(null);
+    setEditingId(restaurant.id);
+    setEditName(restaurant.name);
+    setEditAddress(restaurant.address ?? "");
+  };
+
+  const cancelEdit = () => {
+    setEditingId(null);
+    setEditName("");
+    setEditAddress("");
+    setEditError(null);
+  };
+
+  const saveEdit = async (restaurant: RestaurantAdminSummary) => {
+    setEditError(null);
+    if (!editName.trim()) {
+      setEditError("Restaurant name is required");
+      return;
+    }
+    setSavingEditId(restaurant.id);
+    try {
+      const updated = await api.updateRestaurant(restaurant.id, {
+        name: editName.trim(),
+        address: editAddress.trim() || null,
+      });
+      setRestaurants((prev) =>
+        prev.map((r) => (r.id === restaurant.id ? { ...r, ...updated } : r))
+      );
+      cancelEdit();
+    } catch (e) {
+      setEditError(e instanceof Error ? e.message : "Failed to update restaurant");
+    } finally {
+      setSavingEditId(null);
     }
   };
 
@@ -160,22 +203,72 @@ export function ManageRestaurantsScreen() {
       {restaurants.length === 0 ? (
         <Text style={styles.emptyText}>No restaurants yet. Add one to get started.</Text>
       ) : (
-        restaurants.map((restaurant) => (
-          <View key={restaurant.id} style={styles.restaurantRow}>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.restaurantName}>{restaurant.name}</Text>
-              {restaurant.address && (
-                <Text style={styles.restaurantAddress}>{restaurant.address}</Text>
-              )}
-              {restaurant.adminEmail && (
-                <Text style={styles.restaurantAdmin}>Admin: {restaurant.adminEmail}</Text>
+        restaurants.map((restaurant) => {
+          const isEditing = editingId === restaurant.id;
+          return (
+            <View key={restaurant.id} style={styles.restaurantRow}>
+              <View style={{ flex: 1 }}>
+                {isEditing ? (
+                  <View>
+                    <TextInput
+                      style={styles.input}
+                      value={editName}
+                      onChangeText={setEditName}
+                      placeholder="Restaurant name"
+                      autoFocus
+                    />
+                    <TextInput
+                      style={[styles.input, { marginTop: theme.spacing(2) }]}
+                      value={editAddress}
+                      onChangeText={setEditAddress}
+                      placeholder="Address"
+                    />
+                    {editError && <Text style={styles.error}>{editError}</Text>}
+                    <View style={styles.rowButtons}>
+                      <Button
+                        title="Save"
+                        onPress={() => saveEdit(restaurant)}
+                        loading={savingEditId === restaurant.id}
+                        style={styles.smallButton}
+                      />
+                      <Button
+                        title="Cancel"
+                        variant="outline"
+                        onPress={cancelEdit}
+                        style={styles.smallButton}
+                      />
+                    </View>
+                  </View>
+                ) : (
+                  <View>
+                    <Text style={styles.restaurantName}>{restaurant.name}</Text>
+                    {restaurant.address && (
+                      <Text style={styles.restaurantAddress}>{restaurant.address}</Text>
+                    )}
+                    {restaurant.adminEmail && (
+                      <Text style={styles.restaurantAdmin}>Admin: {restaurant.adminEmail}</Text>
+                    )}
+                  </View>
+                )}
+              </View>
+              {!isEditing && (
+                <View style={{ alignItems: "flex-end" }}>
+                  <Text
+                    style={[styles.badge, restaurant.isOpen ? styles.badgeOpen : styles.badgeClosed]}
+                  >
+                    {restaurant.isOpen ? "Open" : "Closed"}
+                  </Text>
+                  <Button
+                    title="Edit"
+                    variant="outline"
+                    onPress={() => startEdit(restaurant)}
+                    style={styles.editButton}
+                  />
+                </View>
               )}
             </View>
-            <Text style={[styles.badge, restaurant.isOpen ? styles.badgeOpen : styles.badgeClosed]}>
-              {restaurant.isOpen ? "Open" : "Closed"}
-            </Text>
-          </View>
-        ))
+          );
+        })
       )}
     </ScrollView>
   );
@@ -230,4 +323,11 @@ const styles = StyleSheet.create({
   badge: { fontSize: 12, fontWeight: "700", marginLeft: theme.spacing(3) },
   badgeOpen: { color: theme.colors.success },
   badgeClosed: { color: theme.colors.danger },
+  rowButtons: { flexDirection: "row", gap: theme.spacing(2), marginTop: theme.spacing(2) },
+  smallButton: { paddingVertical: theme.spacing(1.5), paddingHorizontal: theme.spacing(2.5) },
+  editButton: {
+    marginTop: theme.spacing(2),
+    paddingVertical: theme.spacing(1.5),
+    paddingHorizontal: theme.spacing(3),
+  },
 });
