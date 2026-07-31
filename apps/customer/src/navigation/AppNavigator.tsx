@@ -1,5 +1,5 @@
 import React from "react";
-import { ActivityIndicator, Text, View } from "react-native";
+import { ActivityIndicator, Pressable, Text, View } from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
@@ -116,7 +116,18 @@ function MainNavigator() {
         <RootStack.Screen
           name="RestaurantMenu"
           component={RestaurantMenuScreen}
-          options={{ title: "" }}
+          options={({ navigation }) => ({
+            title: "",
+            headerRight: () => (
+              <Pressable
+                onPress={() => navigation.navigate("MainTabs", { screen: "CartTab" })}
+                hitSlop={8}
+                style={{ marginRight: theme.spacing(2) }}
+              >
+                <CartTabIcon color={theme.colors.text} size={24} />
+              </Pressable>
+            ),
+          })}
         />
         <RootStack.Screen name="ItemDetail" component={ItemDetailScreen} options={{ title: "" }} />
         <RootStack.Screen name="Checkout" component={CheckoutScreen} options={{ title: "Checkout" }} />
